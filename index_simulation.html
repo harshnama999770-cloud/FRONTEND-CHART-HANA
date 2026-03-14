@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hana Footprint — Professional Trading Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0:#060810;--bg1:#080B12;--bg2:#0A0E18;--bg3:#0D1220;
+  --border:#141E30;--border2:#1A2540;
+  --text0:#E2E8F0;--text1:#8A9BB8;--text2:#4A5C78;--text3:#2A3A52;
+  --blue:#2979FF;--cyan:#00E5FF;--green:#00E676;--teal:#26A69A;
+  --red:#EF5350;--orange:#FF6D00;--yellow:#FFD600;--purple:#AB47BC;
+  --buy:#26A69A;--sell:#EF5350;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100vw;height:100vh;overflow:hidden;background:var(--bg0);color:var(--text0);font-family:'JetBrains Mono',monospace;font-size:11px}
+
+/* ══ APP SHELL ══ */
+#app{display:flex;flex-direction:column;width:100%;height:100%}
+
+/* ══ TOPBAR ══ */
+#topbar{display:flex;align-items:center;height:38px;flex-shrink:0;background:var(--bg1);border-bottom:1px solid var(--border)}
+.tb-sec{display:flex;align-items:center;gap:8px;padding:0 12px;height:100%;border-right:1px solid var(--border)}
+.tb-sec.last{border-right:none;margin-left:auto}
+.logo{font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:13px;color:var(--text0);display:flex;align-items:center;gap:7px}
+.logo-dot{width:8px;height:8px;background:var(--cyan);border-radius:50%;box-shadow:0 0 8px var(--cyan)}
+.badge{background:rgba(41,121,255,.15);color:var(--blue);font-size:8px;padding:2px 5px;border-radius:2px;font-weight:700;letter-spacing:1.2px;border:1px solid rgba(41,121,255,.25)}
+.sym-sel{background:var(--bg3);color:#90CAF9;border:1px solid var(--border2);border-radius:3px;padding:3px 7px;font-size:11px;font-family:inherit;cursor:pointer;outline:none;font-weight:600}
+.sym-sel option{background:var(--bg1)}
+.tf-grp{display:flex;gap:2px}
+.tf-btn{background:transparent;color:var(--text2);border:1px solid transparent;border-radius:2px;padding:2px 7px;font-size:10px;font-family:inherit;cursor:pointer;transition:all .12s;font-weight:500}
+.tf-btn:hover{color:var(--text1);border-color:var(--border2)}
+.tf-btn.active{background:rgba(41,121,255,.2);color:#90CAF9;border-color:rgba(41,121,255,.4)}
+.chip{display:flex;flex-direction:column;gap:1px;padding:0 10px;border-right:1px solid var(--border)}
+.chip:last-child{border-right:none}
+.chip-lbl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
+.chip-val{font-size:11px;color:var(--text1);font-weight:600;line-height:1}
+.chip-val.up{color:var(--buy)}.chip-val.dn{color:var(--sell)}
+.chip-val.cy{color:var(--cyan)}.chip-val.yl{color:var(--yellow)}
+.chip-val.or{color:var(--orange)}
+.conn-dot{width:6px;height:6px;border-radius:50%;background:var(--yellow);flex-shrink:0}
+.conn-dot.live{background:var(--teal);box-shadow:0 0 6px var(--teal);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ══ TOOLBAR ══ */
+#toolbar{display:flex;align-items:center;height:30px;flex-shrink:0;background:var(--bg0);border-bottom:1px solid var(--border)}
+.tb2-sec{display:flex;align-items:center;gap:4px;padding:0 10px;height:100%;border-right:1px solid var(--border)}
+.tb2-sec.last{border-right:none;margin-left:auto}
+.tbl{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;white-space:nowrap}
+.ov-btn{background:transparent;color:var(--text2);border:1px solid transparent;border-radius:2px;padding:1px 7px;font-size:9px;font-family:inherit;cursor:pointer;transition:all .12s;white-space:nowrap;height:20px}
+.ov-btn:hover{color:var(--text1);border-color:var(--border2)}
+.ov-btn.on{border-color:var(--teal);color:var(--teal);background:rgba(38,166,154,.08)}
+.ov-btn.on.vwap{border-color:var(--purple);color:#CE93D8;background:rgba(171,71,188,.08)}
+.ov-btn.on.poc{border-color:var(--yellow);color:var(--yellow);background:rgba(255,214,0,.06)}
+.ov-btn.on.shl{border-color:var(--orange);color:#FFA726;background:rgba(255,109,0,.06)}
+.ov-btn.on.va{border-color:#5C6BC0;color:#9FA8DA;background:rgba(92,107,192,.08)}
+.ov-btn.on.vp{border-color:var(--blue);color:#64B5F6;background:rgba(41,121,255,.08)}
+.ov-btn.on.hvn{border-color:var(--yellow);color:#FFF176;background:rgba(255,214,0,.06)}
+.ov-btn.on.dom{border-color:var(--teal);color:#80CBC4;background:rgba(38,166,154,.06)}
+.ov-btn.on.liq{border-color:var(--orange);color:#FFAB40;background:rgba(255,109,0,.07)}
+.ov-btn.on.diag{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.06)}
+.str-btn.on{border-color:var(--green);color:var(--green);background:rgba(0,230,118,.08)}
+.str-btn.on.sb{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.08)}
+.str-btn.on.st{border-color:#FF1744;color:#FF1744;background:rgba(255,23,68,.08)}
+.str-btn.on.lvn{border-color:#76FF03;color:#76FF03;background:rgba(118,255,3,.07)}
+.str-btn.on.wr{border-color:var(--orange);color:#FFAB40;background:rgba(255,109,0,.08)}
+
+/* ══ WORKSPACE ══ */
+#workspace{flex:1;display:flex;min-height:0;overflow:hidden}
+
+/* ══ LEFT SIDEBAR ══ */
+#leftSidebar{width:200px;flex-shrink:0;display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg1);min-height:0}
+#domWrap{flex:0 0 auto;overflow:hidden;border-bottom:1px solid var(--border)}
+#domBody{overflow:hidden}
+.dom-row{display:grid;grid-template-columns:58px 1fr 58px;height:18px;align-items:center;position:relative;overflow:hidden;transition:background .05s}
+.dom-row:hover{background:rgba(255,255,255,.03)}
+.dom-bid-bar,.dom-ask-bar{position:absolute;top:0;height:100%;opacity:.18;pointer-events:none}
+.dom-bid-bar{right:50%;background:var(--buy)}
+.dom-ask-bar{left:50%;background:var(--sell)}
+.dom-bid{color:var(--buy);text-align:right;padding-right:6px;font-size:10px;font-weight:600;position:relative;z-index:1}
+.dom-ask{color:var(--sell);text-align:left;padding-left:6px;font-size:10px;font-weight:600;position:relative;z-index:1}
+.dom-px{color:var(--text0);text-align:center;font-size:10px;font-weight:700;position:relative;z-index:1}
+.dom-cur .dom-px{color:var(--cyan)}
+.dom-cur{background:rgba(0,229,255,.05);border-top:1px solid rgba(0,229,255,.15);border-bottom:1px solid rgba(0,229,255,.15)}
+#tapeWrap{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+#tapeBody{flex:1;overflow-y:auto;overflow-x:hidden;min-height:0}
+#tapeBody::-webkit-scrollbar{width:3px}
+#tapeBody::-webkit-scrollbar-track{background:var(--bg1)}
+#tapeBody::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.tape-row{display:grid;grid-template-columns:52px 70px 1fr;padding:1px 9px;font-size:9.5px;line-height:1.55;border-bottom:1px solid rgba(255,255,255,.015);position:relative}
+.tape-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px}
+.tape-buy::before{background:var(--buy)}.tape-sell::before{background:var(--sell)}
+.tape-time{color:var(--text3)}.tape-price{font-weight:700}
+.tape-buy .tape-price{color:var(--buy)}.tape-sell .tape-price{color:var(--sell)}
+.tape-sz{text-align:right;color:var(--text2)}
+.tape-row.big .tape-sz{color:var(--yellow);font-weight:700}
+
+/* ══ CHART COLUMN ══ */
+#chartColumn{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0}
+
+/* ══ CHART WRAP ══ */
+#chartWrap{flex:1;position:relative;overflow:hidden;min-height:0;background:var(--bg0); user-select: none;}
+#mainCanvas{display:block;position:absolute;top:0;left:0;cursor:crosshair}
+#psCanvas{display:block;position:absolute;right:0;top:0;pointer-events:none;z-index:10}
+
+/* ══ CHART CONTROLS (top-right of chart) ══ */
+#chartControls{
+  position:absolute;top:8px;right:80px;
+  display:flex;gap:4px;z-index:30;
+}
+.cc-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:26px;height:26px;border-radius:3px;
+  background:rgba(8,11,18,.88);
+  border:1px solid var(--border2);
+  color:var(--text2);font-size:11px;
+  cursor:pointer;transition:all .12s;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);
+  user-select:none;
+}
+.cc-btn:hover{background:rgba(41,121,255,.25);color:#90CAF9;border-color:var(--blue)}
+.cc-btn.active{background:rgba(41,121,255,.3);color:var(--cyan);border-color:var(--cyan)}
+/* fullscreen btn special */
+#btnFS{font-size:12px;width:28px;height:28px}
+#btnFS:hover{background:rgba(0,229,255,.15);color:var(--cyan);border-color:var(--cyan)}
+
+/* ══ SCROLL LEFT/RIGHT BUTTONS ══ */
+.h-scroll-btns{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;z-index:30;
+}
+.hs-btn{
+  display:flex;align-items:center;gap:4px;
+  padding:3px 10px;height:24px;border-radius:3px;
+  background:rgba(8,11,18,.9);
+  border:1px solid var(--border2);
+  color:var(--text2);font-size:10px;
+  cursor:pointer;transition:all .12s;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);
+  user-select:none;white-space:nowrap;
+  font-family:'JetBrains Mono',monospace;
+}
+.hs-btn:hover{background:rgba(41,121,255,.2);color:#90CAF9;border-color:var(--blue)}
+.hs-btn:active{transform:scale(.96)}
+
+/* ══ VERTICAL PAN BUTTONS ══ */
+.v-scroll-btns{
+  position:absolute;right:84px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:5px;z-index:30;
+}
+.vs-btn{
+  width:24px;height:24px;border-radius:50%;
+  background:rgba(8,11,18,.9);border:1px solid var(--border2);
+  color:var(--text2);display:flex;align-items:center;justify-content:center;
+  font-size:10px;cursor:pointer;transition:all .12s;
+  box-shadow:0 2px 8px rgba(0,0,0,.7);user-select:none;
+}
+.vs-btn:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ══ CROSSHAIR OVERLAY ══ */
+#xhLine{position:absolute;pointer-events:none;z-index:20;display:none;top:0;left:0;width:100%;height:100%}
+#xhPriceTag{
+  position:absolute;right:0;display:none;
+  background:var(--blue);color:#fff;
+  font-size:10px;font-weight:700;padding:2px 6px;
+  border-radius:2px 0 0 2px;pointer-events:none;z-index:25;white-space:nowrap;
+}
+#xhTimeTag{
+  position:absolute;bottom:0;display:none;
+  background:var(--blue);color:#fff;
+  font-size:10px;font-weight:700;padding:2px 6px;
+  border-radius:2px 2px 0 0;transform:translateX(-50%);
+  pointer-events:none;z-index:25;white-space:nowrap;
+}
+
+/* ══ REPLAY ══ */
+#replayBar{
+  display:none;position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  background:rgba(61,0,0,.9);border:1px solid var(--sell);border-radius:3px;
+  padding:3px 12px;font-size:10px;color:#EF9A9A;z-index:80;pointer-events:none;
+  animation:blink 1.2s ease infinite;
+}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ══ BOTTOM STRIP ══ */
+#bottomStrip{
+  height:120px;flex-shrink:0;display:flex;
+  border-top:1px solid var(--border);background:var(--bg1);
+}
+#heatmapWrap{flex:1;min-width:0;position:relative;border-right:1px solid var(--border);overflow:hidden}
+#cvdWrap{width:200px;flex-shrink:0;position:relative;overflow:hidden;display:flex;flex-direction:column}
+#cvdCanvas{display:block;position:absolute;bottom:0;left:0}
+#heatmapCanvas{display:block;position:absolute;top:0;left:0}
+.strip-lbl{
+  position:absolute;top:3px;left:6px;
+  font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;
+  pointer-events:none;z-index:5;
+}
+
+/* ══ RIGHT SIDEBAR ══ */
+#rightSidebar{width:240px;flex-shrink:0;display:flex;flex-direction:column;border-left:1px solid var(--border);background:var(--bg1);min-height:0}
+#setupWrap{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;border-bottom:1px solid var(--border)}
+#setupBody{flex:1;overflow-y:auto;min-height:0}
+#setupBody::-webkit-scrollbar{width:3px}
+#setupBody::-webkit-scrollbar-track{background:var(--bg1)}
+#setupBody::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.setup-item{padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.025);border-left:2px solid transparent;cursor:default;transition:background .1s}
+.setup-item:hover{background:rgba(255,255,255,.02)}
+.setup-long{border-left-color:var(--buy)}.setup-short{border-left-color:var(--sell)}.setup-neutral{border-left-color:var(--blue)}
+.si-r1{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.si-type{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.si-px{font-size:10px;color:var(--yellow);font-weight:700}
+.si-title{font-size:10px;color:var(--text0);font-weight:600}
+.si-desc{font-size:9px;color:var(--text2);line-height:1.4;margin-top:1px}
+.si-tag{display:inline-block;font-size:8px;padding:1px 4px;border-radius:2px;font-weight:700;margin-right:3px}
+.si-tag.long{background:rgba(38,166,154,.2);color:var(--buy);border:1px solid rgba(38,166,154,.3)}
+.si-tag.short{background:rgba(239,83,80,.2);color:var(--sell);border:1px solid rgba(239,83,80,.3)}
+#signalWrap{flex:0 0 200px;display:flex;flex-direction:column}
+#signalBody{flex:1;overflow-y:auto;min-height:0}
+#signalBody::-webkit-scrollbar{width:3px}
+#signalBody::-webkit-scrollbar-track{background:var(--bg1)}
+#signalBody::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+.sig-row{display:flex;gap:7px;align-items:flex-start;padding:4px 10px;border-bottom:1px solid rgba(255,255,255,.02);border-left:2px solid var(--border2);font-size:9.5px;animation:sigIn .2s ease}
+@keyframes sigIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.sig-row.sweep{border-left-color:var(--orange);color:#FFB74D}
+.sig-row.imb{border-left-color:#7E57C2;color:#CE93D8}
+.sig-row.absorb{border-left-color:var(--yellow);color:#FFF176}
+.sig-row.exhaust{border-left-color:var(--sell);color:#EF9A9A}
+.sig-row.iceberg{border-left-color:var(--cyan);color:#81D4FA}
+.sig-row.domimb{border-left-color:var(--buy);color:#80CBC4}
+.sig-row.absrev{border-left-color:var(--green);color:#69F0AE}
+.sig-row.stackbo{border-left-color:var(--cyan);color:#80DEEA}
+.sig-row.sweeptrap{border-left-color:#FF1744;color:#FF8A80}
+.sig-row.lvnrej{border-left-color:#76FF03;color:#CCFF90}
+.sig-row.wallhold{border-left-color:var(--buy);color:#80CBC4}
+.sig-row.wallpull{border-left-color:var(--orange);color:#FFAB40}
+.sig-time{color:var(--text3);flex-shrink:0;font-size:8.5px;padding-top:1px}
+.sig-text{line-height:1.4;flex:1}
+
+/* ══ PANEL HEADER ══ */
+.phdr{display:flex;align-items:center;justify-content:space-between;padding:5px 9px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0;height:26px}
+.phdr-title{font-size:8px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+.phdr-meta{font-size:9px;color:var(--text3);font-weight:500}
+
+/* ══ RESIZERS ══ */
+.h-resizer{height:4px;background:transparent;cursor:row-resize;flex-shrink:0;transition:background .15s;z-index:50}
+.h-resizer:hover{background:var(--blue)}
+
+/* ══ TOOLTIP ══ */
+#tooltip{
+  position:fixed;display:none;
+  background:rgba(6,8,16,.97);border:1px solid var(--border2);
+  border-radius:4px;padding:10px 13px;font-size:10px;color:var(--text1);
+  pointer-events:none;z-index:500;
+  box-shadow:0 12px 40px rgba(0,0,0,.9);min-width:210px;backdrop-filter:blur(8px);
+}
+.tt-sec{font-size:8px;color:var(--text3);text-transform:uppercase;letter-spacing:.9px;padding:5px 0 3px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.tt-sec:first-child{padding-top:0}
+.tt-ln{display:flex;justify-content:space-between;gap:14px;margin-bottom:2px}
+.tt-lbl{color:var(--text3)}.tt-v{font-weight:700;color:var(--text1)}
+.tt-v.up{color:var(--buy)}.tt-v.dn{color:var(--sell)}.tt-v.yl{color:var(--yellow)}
+
+/* ══ LEGEND ══ */
+.leg-wrap{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.leg{display:flex;align-items:center;gap:3px;font-size:8px;color:var(--text3)}
+.leg-sq{width:7px;height:7px;border-radius:1px;flex-shrink:0}
+
+/* ══ FULLSCREEN OVERLAY ══ */
+#fsOverlay{
+  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:var(--bg0);z-index:900;flex-direction:column;
+}
+#fsOverlay.active{display:flex}
+#fsTopBar{
+  display:flex;align-items:center;gap:8px;padding:0 12px;
+  height:34px;flex-shrink:0;background:var(--bg1);
+  border-bottom:1px solid var(--border);
+}
+#fsChartWrap{flex:1;position:relative;overflow:hidden;background:var(--bg0); user-select: none;}
+#fsCanvas{display:block;position:absolute;top:0;left:0;cursor:crosshair}
+#fsPsCanvas{display:block;position:absolute;right:0;top:0;pointer-events:none;z-index:10}
+#fsBottomStrip{
+  height:120px;flex-shrink:0;display:flex;
+  border-top:1px solid var(--border);background:var(--bg1);
+}
+#fsHeatmapWrap{flex:1;min-width:0;position:relative;border-right:1px solid var(--border);overflow:hidden}
+#fsCvdWrap{width:220px;flex-shrink:0;position:relative;overflow:hidden}
+#fsHeatmapCanvas{display:block;position:absolute;top:0;left:0}
+#fsCvdCanvas{display:block;position:absolute;bottom:0;left:0}
+#fsChartControls{
+  position:absolute;top:8px;right:80px;
+  display:flex;gap:4px;z-index:30;
+}
+.fs-h-scroll{
+  position:absolute;bottom:8px;left:50%;transform:translateX(-50%);
+  display:flex;gap:6px;z-index:30;
+}
+#fsXhPriceTag{
+  position:absolute;right:0;display:none;
+  background:var(--blue);color:#fff;
+  font-size:10px;font-weight:700;padding:2px 6px;
+  border-radius:2px 0 0 2px;pointer-events:none;z-index:25;white-space:nowrap;
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ════════════════ TOPBAR ════════════════ -->
+<div id="topbar">
+  <div class="tb-sec">
+    <div class="logo"><span class="logo-dot"></span>HANA <span style="color:var(--text2);font-weight:300">FP</span></div>
+    <span class="badge">PRO</span>
+  </div>
+  <div class="tb-sec">
+    <select class="sym-sel" id="symSel">
+      <option value="BTCUSDT">BTC/USDT</option>
+      <option value="ETHUSDT">ETH/USDT</option>
+      <option value="SOLUSDT">SOL/USDT</option>
+      <option value="BNBUSDT">BNB/USDT</option>
+      <option value="XRPUSDT">XRP/USDT</option>
+    </select>
+    <div class="tf-grp" id="tfGroup">
+      <button class="tf-btn active" data-s="30">30s</button>
+      <button class="tf-btn" data-s="60">1m</button>
+      <button class="tf-btn" data-s="300">5m</button>
+      <button class="tf-btn" data-s="900">15m</button>
+      <button class="tf-btn" data-s="1800">30m</button>
+      <button class="tf-btn" data-s="3600">1h</button>
+    </div>
+  </div>
+  <div class="tb-sec" style="gap:0">
+    <div class="chip"><span class="chip-lbl">Price</span><span class="chip-val cy" id="spPrice">—</span></div>
+    <div class="chip"><span class="chip-lbl">Delta</span><span class="chip-val" id="spDelta">—</span></div>
+    <div class="chip"><span class="chip-lbl">CVD</span><span class="chip-val" id="spCVD">—</span></div>
+    <div class="chip"><span class="chip-lbl">TPS</span><span class="chip-val" id="spTPS">—</span></div>
+    <div class="chip"><span class="chip-lbl">VWAP</span><span class="chip-val" id="spVWAP">—</span></div>
+    <div class="chip"><span class="chip-lbl">Sess H</span><span class="chip-val yl" id="spSH">—</span></div>
+    <div class="chip"><span class="chip-lbl">Sess L</span><span class="chip-val or" id="spSL">—</span></div>
+    <div class="chip"><span class="chip-lbl">DOM Imb</span><span class="chip-val" id="spDOM">—</span></div>
+    <div class="chip"><span class="chip-lbl">Spread</span><span class="chip-val" id="spSpread">—</span></div>
+  </div>
+  <div class="tb-sec last">
+    <div class="leg-wrap">
+      <div class="leg"><div class="leg-sq" style="background:var(--yellow)"></div>Extreme</div>
+      <div class="leg"><div class="leg-sq" style="background:var(--orange)"></div>High</div>
+      <div class="leg"><div class="leg-sq" style="background:var(--blue)"></div>Mid</div>
+      <div class="leg"><div class="leg-sq" style="background:#0D3B6E;border:1px solid var(--blue)"></div>Low</div>
+      <div class="leg"><div class="leg-sq" style="background:#003D33;border:1px solid var(--buy)"></div>Buy Imb</div>
+      <div class="leg"><div class="leg-sq" style="background:#3D0000;border:1px solid var(--sell)"></div>Sell Imb</div>
+      <div class="leg"><div class="leg-sq" style="background:#1E4A7E;border:1px solid var(--blue)"></div>HVN</div>
+      <div class="leg"><div class="leg-sq" style="background:#3D1A1A;border:1px solid var(--sell)"></div>LVN</div>
+    </div>
+    <div class="conn-dot live" id="connDot"></div>
+    <span style="font-size:9px;color:var(--text2)" id="connLbl">LIVE</span>
+  </div>
+</div>
+
+<!-- ════════════════ TOOLBAR ════════════════ -->
+<div id="toolbar">
+  <div class="tb2-sec">
+    <span class="tbl">Overlays</span>
+    <button class="ov-btn vwap on" id="btnVWAP">VWAP</button>
+    <button class="ov-btn poc on"  id="btnPOC">POC Ext</button>
+    <button class="ov-btn va on"   id="btnVA">Value Area</button>
+    <button class="ov-btn shl on"  id="btnSHL">Sess H/L</button>
+    <button class="ov-btn diag on" id="btnDiag">Diag Imb</button>
+    <button class="ov-btn vp on"   id="btnVP">Vol Profile</button>
+    <button class="ov-btn hvn on"  id="btnHVN">HVN/LVN</button>
+    <button class="ov-btn dom on"  id="btnDOMOv">DOM Imb</button>
+    <button class="ov-btn liq on"  id="btnLiq">Liq Walls</button>
+  </div>
+  <div class="tb2-sec">
+    <span class="tbl">Strategies</span>
+    <button class="ov-btn str-btn on"     id="btnAR">★ Abs Rev</button>
+    <button class="ov-btn str-btn sb on"  id="btnSB">⬆⬆ Stack Bo</button>
+    <button class="ov-btn str-btn st on"  id="btnST">🪤 Sweep Trap</button>
+    <button class="ov-btn str-btn lvn on" id="btnLVN">◆ LVN Reject</button>
+    <button class="ov-btn str-btn wr on"  id="btnWR">🧱 Wall React</button>
+  </div>
+  <div class="tb2-sec last">
+    <span style="font-size:8px;color:var(--text3)">
+      <span style="color:var(--yellow)">●</span> Absorb &nbsp;
+      <span style="color:var(--sell)">●</span> Exhaust &nbsp;
+      <span style="color:var(--cyan)">●</span> Iceberg &nbsp;
+      <span style="color:#7E57C2">●</span> Stk Imb &nbsp;
+      <span style="color:var(--cyan)">╲</span> Diag &nbsp;
+      <span style="color:var(--orange)">⚡</span> Sweep
+    </span>
+  </div>
+</div>
+
+<!-- ════════════════ WORKSPACE ════════════════ -->
+<div id="workspace">
+
+  <!-- LEFT: DOM + TAPE -->
+  <div id="leftSidebar">
+    <div id="domWrap">
+      <div class="phdr">
+        <span class="phdr-title">Order Book</span>
+        <span class="phdr-meta" id="domSpreadLbl">—</span>
+      </div>
+      <div id="domBody"></div>
+    </div>
+    <div class="h-resizer" id="domResize"></div>
+    <div id="tapeWrap">
+      <div class="phdr">
+        <span class="phdr-title">Time &amp; Sales</span>
+        <span class="phdr-meta" id="tapeTPS">— t/s</span>
+      </div>
+      <div id="tapeBody"></div>
+    </div>
+  </div>
+
+  <!-- CENTER: CHART + BOTTOM STRIP -->
+  <div id="chartColumn">
+
+    <div id="chartWrap">
+      <canvas id="mainCanvas"></canvas>
+      <canvas id="psCanvas"></canvas>
+
+      <!-- Crosshair overlay -->
+      <canvas id="xhCanvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:18"></canvas>
+      <div id="xhPriceTag"></div>
+      <div id="xhTimeTag"></div>
+
+      <!-- Top-right chart controls: Scroll L, Scroll R, Fullscreen -->
+      <div id="chartControls">
+        <div class="cc-btn" id="btnScrollLeft"  title="Scroll Left">◀</div>
+        <div class="cc-btn" id="btnScrollRight" title="Scroll Right">▶</div>
+        <div class="cc-btn" id="btnZoomIn"      title="Zoom In (Ctrl+Scroll)">+</div>
+        <div class="cc-btn" id="btnZoomOut"     title="Zoom Out">−</div>
+        <div class="cc-btn" id="btnFS"          title="Fullscreen Chart">⛶</div>
+      </div>
+
+      <!-- Bottom horizontal scroll -->
+      <div class="h-scroll-btns">
+        <div class="hs-btn" id="btnPanLeft">◀ Scroll</div>
+        <div class="hs-btn" id="btnReset">● Latest</div>
+        <div class="hs-btn" id="btnPanRight">Scroll ▶</div>
+      </div>
+
+      <!-- Vertical pan -->
+      <div class="v-scroll-btns">
+        <div class="vs-btn" id="btnUp">▲</div>
+        <div class="vs-btn" id="btnDn">▼</div>
+      </div>
+
+      <div id="replayBar">⏸ REPLAY MODE</div>
+    </div>
+
+    <!-- BOTTOM: HEATMAP + CVD -->
+    <div id="bottomStrip">
+      <div id="heatmapWrap">
+        <span class="strip-lbl">Order Flow Heatmap</span>
+        <canvas id="heatmapCanvas"></canvas>
+      </div>
+      <div id="cvdWrap">
+        <span class="strip-lbl">CVD</span>
+        <canvas id="cvdCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: SETUPS + SIGNALS -->
+  <div id="rightSidebar">
+    <div id="setupWrap">
+      <div class="phdr">
+        <span class="phdr-title">Order Flow Setups</span>
+        <span class="phdr-meta" id="setupTime" style="color:var(--buy)">—</span>
+      </div>
+      <div id="setupBody"></div>
+    </div>
+    <div class="h-resizer" id="sigResize"></div>
+    <div id="signalWrap">
+      <div class="phdr">
+        <span class="phdr-title">Signal Feed</span>
+        <span class="phdr-meta" id="sigCount" style="color:var(--cyan)">—</span>
+      </div>
+      <div id="signalBody"></div>
+    </div>
+  </div>
+
+</div><!-- workspace -->
+</div><!-- app -->
+
+<!-- ════════════════ FULLSCREEN OVERLAY ════════════════ -->
+<div id="fsOverlay">
+  <div id="fsTopBar">
+    <div class="logo" style="font-size:12px"><span class="logo-dot"></span>HANA FP <span style="color:var(--text2);font-weight:300;font-size:10px">— FULLSCREEN</span></div>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+      <span style="font-size:9px;color:var(--text2)" id="fsPriceTag">—</span>
+      <div class="cc-btn" id="btnExitFS" title="Exit Fullscreen" style="font-size:14px;width:28px;height:28px">✕</div>
+    </div>
+  </div>
+  <div id="fsChartWrap">
+    <canvas id="fsCanvas"></canvas>
+    <canvas id="fsPsCanvas"></canvas>
+    <canvas id="fsXhCanvas" style="position:absolute;top:0;left:0;pointer-events:none;z-index:18"></canvas>
+    <div id="fsXhPriceTag"></div>
+    <!-- FS controls -->
+    <div id="fsChartControls">
+      <div class="cc-btn" id="fsBtnScrollLeft">◀</div>
+      <div class="cc-btn" id="fsBtnScrollRight">▶</div>
+      <div class="cc-btn" id="fsBtnZoomIn">+</div>
+      <div class="cc-btn" id="fsBtnZoomOut">−</div>
+    </div>
+    <div class="fs-h-scroll">
+      <div class="hs-btn" id="fsBtnPanLeft">◀ Scroll</div>
+      <div class="hs-btn" id="fsBtnReset">● Latest</div>
+      <div class="hs-btn" id="fsBtnPanRight">Scroll ▶</div>
+    </div>
+    <div class="v-scroll-btns" style="right:88px">
+      <div class="vs-btn" id="fsBtnUp">▲</div>
+      <div class="vs-btn" id="fsBtnDn">▼</div>
+    </div>
+  </div>
+  <div id="fsBottomStrip">
+    <div id="fsHeatmapWrap">
+      <span class="strip-lbl">Order Flow Heatmap</span>
+      <canvas id="fsHeatmapCanvas"></canvas>
+    </div>
+    <div id="fsCvdWrap">
+      <span class="strip-lbl">CVD</span>
+      <canvas id="fsCvdCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip">
+  <div class="tt-sec">Price Level</div>
+  <div class="tt-ln"><span class="tt-lbl">Price</span><span class="tt-v" id="ttPrice">—</span></div>
+  <div class="tt-ln"><span class="tt-lbl">Bid Vol</span><span class="tt-v up" id="ttBid">—</span></div>
+  <div class="tt-ln"><span class="tt-lbl">Ask Vol</span><span class="tt-v dn" id="ttAsk">—</span></div>
+  <div class="tt-ln"><span class="tt-lbl">Delta</span><span class="tt-v" id="ttDelta">—</span></div>
+  <div class="tt-ln"><span class="tt-lbl">Total Vol</span><span class="tt-v" id="ttVol">—</span></div>
+  <div class="tt-sec">Candle Analytics</div>
+  <div class="tt-ln"><span class="tt-lbl">POC</span><span class="tt-v yl" id="ttPOC">—</span></div>
+  <div class="tt-ln"><span class="tt-lbl">VAH</span><span class="tt-v" id="ttVAH">—</span></div>
+  <div class="tt-ln"><span class="tt-lbl">VAL</span><span class="tt-v" id="ttVAL">—</span></div>
+  <div class="tt-sec">Session Profile</div>
+  <div class="tt-ln"><span class="tt-lbl">Sess Vol</span><span class="tt-v" id="ttSVol">—</span></div>
+  <div class="tt-ln"><span class="tt-lbl">Node</span><span class="tt-v" id="ttNode">—</span></div>
+  <div class="tt-sec">Signals</div>
+  <div id="ttSigs" style="font-size:9px;color:var(--orange);min-height:12px">—</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  HANA FOOTPRINT PRO v3 — Full trading terminal (Upgraded)
+// ═══════════════════════════════════════════════════════════
+
+const C = {
+  bg0:'#060810',bg1:'#080B12',bg2:'#0A0E18',border:'#141E30',border2:'#1A2540',
+  text0:'#E2E8F0',text1:'#8A9BB8',text2:'#4A5C78',text3:'#2A3A52',
+  blue:'#2979FF',cyan:'#00E5FF',green:'#00E676',teal:'#26A69A',
+  red:'#EF5350',orange:'#FF6D00',yellow:'#FFD600',purple:'#AB47BC',
+  buy:'#26A69A',sell:'#EF5350'
+};
+
+// ─── Shared state ──────────────────────────────────────────
+const ST = {
+  symbol:'BTCUSDT', interval:30,
+  dec: 1, tick: 0.1,  // Dynamic precision variables
+  candles:[], currentCandle:null,
+  dom:{bids:[],asks:[],midPrice:0},
+  tape:[], cvdHistory:[], customLevels: [],
+  sessionHigh:0, sessionLow:Infinity,
+  vwapPrice:0, totalVol:0, vwapSum:0,
+  cvd:0, tps:0, tpsCount:0, tpsTimer:0,
+  signals:[], setups:[],
+  priceOffset:0,
+  candleWidth:54, candleGap:3,
+  scrollOffset:0,   
+  overlays:{vwap:true,poc:true,va:true,shl:true,diag:true,vp:true,hvn:true,dom:true,liq:true},
+  strategies:{ar:true,sb:true,st:true,lvn:true,wr:true},
+  hoverCandleIdx:null,
+  sigCount:0,
+  fsMode:false,
+};
+
+// Helper format price
+function pxFmt(p) { return Number(p).toFixed(ST.dec); }
+
+// ─── Canvas refs ───────────────────────────────────────────
+const mainCanvas   = document.getElementById('mainCanvas');
+const psCanvas     = document.getElementById('psCanvas');
+const xhCanvas     = document.getElementById('xhCanvas');
+const hmCanvas     = document.getElementById('heatmapCanvas');
+const cvdCanvas    = document.getElementById('cvdCanvas');
+const fsCanvas     = document.getElementById('fsCanvas');
+const fsPsCanvas   = document.getElementById('fsPsCanvas');
+const fsXhCanvas   = document.getElementById('fsXhCanvas');
+const fsHmCanvas   = document.getElementById('fsHeatmapCanvas');
+const fsCvdCanvas  = document.getElementById('fsCvdCanvas');
+
+const mctx  = mainCanvas.getContext('2d');
+const psctx = psCanvas.getContext('2d');
+const xhctx = xhCanvas.getContext('2d');
+const hmctx = hmCanvas.getContext('2d');
+const cvctx = cvdCanvas.getContext('2d');
+const fmctx = fsCanvas.getContext('2d');
+const fpsctx= fsPsCanvas.getContext('2d');
+const fxctx = fsXhCanvas.getContext('2d');
+const fhmctx= fsHmCanvas.getContext('2d');
+const fcvctx= fsCvdCanvas.getContext('2d');
+
+const PSW = 72;
+let dims = { W:0, H:0 };
+let fsDims = { W:0, H:0 };
+
+function resizeAll() {
+  const cw  = document.getElementById('chartWrap');
+  const bs  = document.getElementById('bottomStrip');
+  const hw  = document.getElementById('heatmapWrap');
+  const cvw = document.getElementById('cvdWrap');
+  dims.W = cw.offsetWidth; dims.H = cw.offsetHeight;
+  mainCanvas.width  = dims.W; mainCanvas.height = dims.H;
+  psCanvas.width    = PSW;    psCanvas.height   = dims.H;
+  xhCanvas.width    = dims.W; xhCanvas.height   = dims.H;
+  psCanvas.style.width  = PSW+'px';
+  psCanvas.style.height = dims.H+'px';
+  const bh  = bs.offsetHeight;
+  const hww = hw.offsetWidth;
+  const cvww= cvw.offsetWidth;
+  hmCanvas.width  = hww;  hmCanvas.height  = bh;
+  cvdCanvas.width = cvww; cvdCanvas.height = bh;
+  if(ST.fsMode) resizeFS();
+}
+
+function resizeFS() {
+  const fcw  = document.getElementById('fsChartWrap');
+  const fbs  = document.getElementById('fsBottomStrip');
+  const fhw  = document.getElementById('fsHeatmapWrap');
+  const fcvw = document.getElementById('fsCvdWrap');
+  fsDims.W = fcw.offsetWidth; fsDims.H = fcw.offsetHeight;
+  fsCanvas.width    = fsDims.W; fsCanvas.height = fsDims.H;
+  fsPsCanvas.width  = PSW;     fsPsCanvas.height = fsDims.H;
+  fsXhCanvas.width  = fsDims.W; fsXhCanvas.height = fsDims.H;
+  fsPsCanvas.style.width  = PSW+'px';
+  fsPsCanvas.style.height = fsDims.H+'px';
+  const bh   = fbs.offsetHeight;
+  const fhww = fhw.offsetWidth;
+  const fcww = fcvw.offsetWidth;
+  fsHmCanvas.width  = fhww; fsHmCanvas.height  = bh;
+  fsCvdCanvas.width = fcww; fsCvdCanvas.height = bh;
+}
+
+// ─── Price simulation ──────────────────────────────────────
+let simPrice = 67900, simTrend = 0, simVol = 1;
+function nextPrice() {
+  simTrend += (Math.random()-.502)*.3;
+  simTrend  = Math.max(-3, Math.min(3, simTrend));
+  simVol    = Math.max(.5, Math.min(3, simVol+(Math.random()-.5)*.2));
+  
+  // Scale volatility realistic to asset price
+  const scale = simPrice / 67900; 
+  const move = (simTrend*.3 + (Math.random()-.5)*simVol*2.5) * Math.max(0.001, scale);
+  
+  const multiplier = Math.pow(10, ST.dec);
+  simPrice  = Math.round((simPrice+move)*multiplier)/multiplier;
+  simPrice  = Math.max(simPrice, ST.tick); // Stop dropping below 0
+  return simPrice;
+}
+
+// ─── Candle helpers ────────────────────────────────────────
+function newCandle(price) {
+  return {time:Date.now(),open:price,high:price,low:price,close:price,rows:[],delta:0,totalVol:0,poc:price,vah:price,val:price,signals:[]};
+}
+function updateCandle(c, price, isBuy, size) {
+  c.close = price;
+  c.high  = Math.max(c.high, price);
+  c.low   = Math.min(c.low,  price);
+  c.totalVol += size;
+  c.delta    += isBuy ? size : -size;
+  const pxKey = +price.toFixed(ST.dec);
+  let row = c.rows.find(r=>r.px===pxKey);
+  if (!row) { row={px:pxKey,bid:0,ask:0}; c.rows.push(row); }
+  if (isBuy) row.ask+=size; else row.bid+=size;
+  row.bid=+row.bid.toFixed(4); row.ask=+row.ask.toFixed(4);
+  const mx = c.rows.reduce((a,b)=>(a.bid+a.ask>b.bid+b.ask?a:b),c.rows[0]);
+  if (mx) c.poc = mx.px;
+}
+function closeCandle(c) {
+  const sorted = c.rows.slice().sort((a,b)=>(b.bid+b.ask)-(a.bid+a.ask));
+  const tgt = c.totalVol*.7; let acc=0; const vr=[];
+  for(const r of sorted){acc+=r.bid+r.ask;vr.push(r.px);if(acc>=tgt)break;}
+  c.vah = vr.length?Math.max(...vr):c.high;
+  c.val = vr.length?Math.min(...vr):c.low;
+}
+
+// ─── DOM simulation ────────────────────────────────────────
+function buildDOM(mid) {
+  const bids=[],asks=[];
+  for(let i=1;i<=12;i++){
+    bids.push({px:+(mid-i*ST.tick).toFixed(ST.dec),sz:+(Math.random()*5+.1).toFixed(3)});
+    asks.push({px:+(mid+i*ST.tick).toFixed(ST.dec),sz:+(Math.random()*5+.1).toFixed(3)});
+  }
+  if(Math.random()<.05)bids[3+Math.floor(Math.random()*4)].sz=+(10+Math.random()*20).toFixed(3);
+  if(Math.random()<.05)asks[3+Math.floor(Math.random()*4)].sz=+(10+Math.random()*20).toFixed(3);
+  ST.dom={bids,asks,midPrice:mid};
+}
+
+// ─── DOM render ────────────────────────────────────────────
+const domBody = document.getElementById('domBody');
+function renderDOM() {
+  const {bids,asks,midPrice}=ST.dom;
+  const maxSz=Math.max(...bids.map(b=>b.sz),...asks.map(a=>a.sz),1);
+  const allRows=[];
+  asks.slice().reverse().forEach(a=>allRows.push({t:'ask',...a}));
+  allRows.push({t:'mid',px:midPrice});
+  bids.forEach(b=>allRows.push({t:'bid',...b}));
+  const frag=document.createDocumentFragment();
+  allRows.forEach(row=>{
+    const div=document.createElement('div');
+    if(row.t==='mid'){
+      div.className='dom-row dom-cur';
+      div.innerHTML=`<span class="dom-bid" style="color:var(--text3)">—</span><span class="dom-px">${pxFmt(row.px)}</span><span class="dom-ask" style="color:var(--text3)">—</span>`;
+    } else {
+      const pct=(row.sz/maxSz*80);
+      div.className='dom-row';
+      if(row.t==='bid'){
+        div.innerHTML=`<div class="dom-bid-bar" style="width:${pct}%"></div><span class="dom-bid">${row.sz.toFixed(3)}</span><span class="dom-px">${pxFmt(row.px)}</span><span class="dom-ask" style="color:var(--text3)">—</span>`;
+      } else {
+        div.innerHTML=`<div class="dom-ask-bar" style="width:${pct}%"></div><span class="dom-bid" style="color:var(--text3)">—</span><span class="dom-px">${pxFmt(row.px)}</span><span class="dom-ask">${row.sz.toFixed(3)}</span>`;
+      }
+    }
+    frag.appendChild(div);
+  });
+  domBody.innerHTML='';
+  domBody.appendChild(frag);
+  domBody.parentElement.style.height=(25*18+26)+'px';
+  document.getElementById('domSpreadLbl').textContent=
+    bids[0]&&asks[0]?'Sprd '+pxFmt(asks[0].px-bids[0].px):'—';
+}
+
+// ─── Tape render ───────────────────────────────────────────
+const tapeBody=document.getElementById('tapeBody');
+function addTapeRow(time,price,size,isBuy){
+  const big=size>.5;
+  const div=document.createElement('div');
+  div.className=`tape-row ${isBuy?'tape-buy':'tape-sell'}${big?' big':''}`;
+  const ts=new Date(time);
+  const str=`${ts.getHours().toString().padStart(2,'0')}:${ts.getMinutes().toString().padStart(2,'0')}:${ts.getSeconds().toString().padStart(2,'0')}`;
+  div.innerHTML=`<span class="tape-time">${str}</span><span class="tape-price">${pxFmt(price)}</span><span class="tape-sz">${size.toFixed(3)}</span>`;
+  tapeBody.insertBefore(div,tapeBody.firstChild);
+  if(tapeBody.childElementCount>150)tapeBody.removeChild(tapeBody.lastChild);
+}
+
+// ─── Signal feed ───────────────────────────────────────────
+const signalBody=document.getElementById('signalBody');
+const sigDefs=[
+  {cls:'sweep',txt:'⚡ Sweep @ '},{cls:'imb',txt:'║ Stk Imb @ '},
+  {cls:'absorb',txt:'◉ Absorption @ '},{cls:'exhaust',txt:'↘ Exhaustion @ '},
+  {cls:'iceberg',txt:'❄ Iceberg @ '},{cls:'domimb',txt:'▣ DOM Imb @ '},
+  {cls:'absrev',txt:'★ Abs Reversal @ '},{cls:'stackbo',txt:'⬆⬆ Stack Breakout @ '},
+  {cls:'sweeptrap',txt:'🪤 Sweep Trap @ '},{cls:'lvnrej',txt:'◆ LVN Reject @ '},
+  {cls:'wallhold',txt:'🧱 Wall Hold @ '},{cls:'wallpull',txt:'⚠ Wall Pulled @ '},
+];
+function addSignal(type,price){
+  const def=sigDefs.find(s=>s.cls===type)||sigDefs[0];
+  const now=new Date();
+  const ts=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+  const div=document.createElement('div');
+  div.className=`sig-row ${type}`;
+  div.innerHTML=`<span class="sig-time">${ts}</span><span class="sig-text">${def.txt}${pxFmt(price)}</span>`;
+  signalBody.insertBefore(div,signalBody.firstChild);
+  if(signalBody.childElementCount>60)signalBody.removeChild(signalBody.lastChild);
+  ST.sigCount++;
+  document.getElementById('sigCount').textContent=ST.sigCount+' total';
+}
+
+// ─── Setups panel ──────────────────────────────────────────
+const setupBody=document.getElementById('setupBody');
+const setupDefs=[
+  {title:'Abs Reversal',type:'long',desc:'Large buy absorption + delta divergence'},
+  {title:'Stack Breakout',type:'long',desc:'3x stacked buy imbalances above DOM'},
+  {title:'Sweep Trap',type:'short',desc:'Sweep failed, price reversing fast'},
+  {title:'LVN Reject',type:'short',desc:'LVN zone + exhaustion signal'},
+  {title:'Wall React',type:'neutral',desc:'DOM wall holding with absorption'},
+  {title:'DOM Imbalance',type:'short',desc:'1:16 sell DOM ratio @ session high'},
+  {title:'Stacked SELL×3',type:'short',desc:'3x consecutive sell imbalances'},
+  {title:'Iceberg Bid',type:'long',desc:'Hidden iceberg order absorbing sell'},
+];
+function refreshSetups(price){
+  if(setupBody.children.length>12)return;
+  const def=setupDefs[Math.floor(Math.random()*setupDefs.length)];
+  const now=new Date();
+  const ts=`${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+  document.getElementById('setupTime').textContent=ts+' ●';
+  const div=document.createElement('div');
+  div.className=`setup-item setup-${def.type}`;
+  const tag=def.type==='long'||def.type==='short'?`<span class="si-tag ${def.type}">${def.type.toUpperCase()}</span>`:'';
+  div.innerHTML=`<div class="si-r1"><span class="si-type">${ts}</span><span class="si-px">${pxFmt(price)}</span></div><div>${tag}<span class="si-title">${def.title}</span></div><div class="si-desc">${def.desc}</div>`;
+  setupBody.insertBefore(div,setupBody.firstChild);
+  if(setupBody.children.length>20)setupBody.removeChild(setupBody.lastChild);
+}
+
+// ─── Core chart renderer (works for both normal + FS) ─────
+function drawChart(ctx, psCtx, W, H, xhCtx) {
+  if(!W||!H) return;
+  ctx.clearRect(0,0,W,H);
+  const chartW = W - PSW - 4;
+
+  const allCandles = [...ST.candles];
+  if(ST.currentCandle) allCandles.push(ST.currentCandle);
+  if(!allCandles.length) return;
+
+  const cw   = ST.candleWidth;
+  const gap  = ST.candleGap;
+  const totalW = cw + gap;
+
+  const visibleCount = Math.floor(chartW / totalW);
+  const endIdx   = Math.max(allCandles.length, visibleCount) - ST.scrollOffset;
+  const startIdx = endIdx - visibleCount;
+  const visible = allCandles.slice(Math.max(0,startIdx), Math.max(0,endIdx)+1);
+
+  if(!visible.length) return;
+
+  let pHigh=-Infinity, pLow=Infinity;
+  visible.forEach(c=>{pHigh=Math.max(pHigh,c.high);pLow=Math.min(pLow,c.low)});
+  const pad=(pHigh-pLow)*.12||(3*ST.tick);
+  pHigh+=pad; pLow-=pad;
+  const adjHigh = pHigh + ST.priceOffset;
+  const adjLow  = pLow  + ST.priceOffset;
+
+  function py(p){ return H*(1-(p-adjLow)/(adjHigh-adjLow)); }
+
+  // ── Grid ──
+  ctx.strokeStyle='#0C1420'; ctx.lineWidth=1;
+  for(let i=0;i<8;i++){
+    const y=Math.round(H/8*i)+.5;
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(chartW,y);ctx.stroke();
+  }
+  for(let i=0;i<10;i++){
+    const x=Math.round(chartW/10*i)+.5;
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();
+  }
+
+  // ── Custom Price Levels (Double Clicked) ──
+  ST.customLevels.forEach(lvl => {
+    const ly = py(lvl);
+    if(ly > 0 && ly < H) {
+      ctx.strokeStyle = '#00E5FF'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 2]);
+      ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(chartW, ly); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#00E5FF'; ctx.font = 'bold 9px JetBrains Mono';
+      ctx.fillText('Lvl ' + pxFmt(lvl), chartW - 55, ly - 4);
+    }
+  });
+
+  // ── Volume Profile ──
+  if(ST.overlays.vp){
+    const vpMap={};
+    allCandles.forEach(c=>c.rows.forEach(r=>{const k=r.px.toFixed(ST.dec);vpMap[k]=(vpMap[k]||0)+r.bid+r.ask;}));
+    const maxV=Math.max(...Object.values(vpMap),.001);
+    const vpW=48;
+    Object.entries(vpMap).forEach(([px,vol])=>{
+      const y=py(+px); const bw=(vol/maxV)*vpW;
+      ctx.fillStyle='rgba(30,136,229,0.12)';
+      ctx.fillRect(chartW-vpW-2,y-1.5,bw,3);
+    });
+  }
+
+  // ── Session H/L ──
+  if(ST.overlays.shl&&ST.sessionHigh>0&&ST.sessionLow<Infinity){
+    const syh=py(ST.sessionHigh), syl=py(ST.sessionLow);
+    ctx.setLineDash([4,4]);
+    ctx.strokeStyle=C.yellow; ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(0,syh);ctx.lineTo(chartW-52,syh);ctx.stroke();
+    ctx.fillStyle=C.yellow;ctx.font='9px JetBrains Mono';
+    ctx.fillText('SH '+pxFmt(ST.sessionHigh),4,syh-3);
+    ctx.strokeStyle=C.orange;
+    ctx.beginPath();ctx.moveTo(0,syl);ctx.lineTo(chartW-52,syl);ctx.stroke();
+    ctx.fillStyle=C.orange;
+    ctx.fillText('SL '+pxFmt(ST.sessionLow),4,syl+11);
+    ctx.setLineDash([]);
+  }
+
+  // ── VWAP ──
+  if(ST.overlays.vwap&&ST.vwapPrice>0){
+    const vy=py(ST.vwapPrice);
+    ctx.setLineDash([6,3]);ctx.strokeStyle='#CE93D8';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,vy);ctx.lineTo(chartW-52,vy);ctx.stroke();
+    ctx.fillStyle='#CE93D8';ctx.font='9px JetBrains Mono';
+    ctx.fillText('VWAP '+pxFmt(ST.vwapPrice),4,vy-3);
+    ctx.setLineDash([]);
+  }
+
+  // ── Candles ──
+  visible.forEach((candle, vi) => {
+    const globalIdx = Math.max(0,startIdx)+vi;
+    const x = vi*totalW + 2;
+
+    const oy=py(candle.open), cy2=py(candle.close);
+    const hy=py(candle.high),  ly=py(candle.low);
+    const isBull = candle.close>=candle.open;
+    const col    = isBull?C.buy:C.sell;
+
+    // ── Footprint cells ──
+    if(candle.rows.length>0){
+      const maxRV=Math.max(...candle.rows.map(r=>r.bid+r.ask),.001);
+      const rowH = Math.max(2, Math.abs(py(candle.low - ST.tick/2) - py(candle.low + ST.tick/2)));
+      
+      candle.rows.forEach(row=>{
+        const ry=py(row.px);
+        const vol=row.bid+row.ask;
+        const pct=vol/maxRV;
+        // background color by volume intensity
+        let bg;
+        if(pct>.85)      bg=C.yellow;
+        else if(pct>.65) bg=C.orange;
+        else if(pct>.40) bg=C.blue;
+        else             bg='#0D3B6E';
+        // Imbalance override
+        const bidr=row.ask>0?row.bid/row.ask:99;
+        const askr=row.bid>0?row.ask/row.bid:99;
+        if(bidr>=3&&row.bid>.001) bg='rgba(239,83,80,.55)';
+        if(askr>=3&&row.ask>.001) bg='rgba(38,166,154,.55)';
+        ctx.fillStyle=bg;
+        ctx.globalAlpha=.72+pct*.28;
+        ctx.fillRect(x+1,ry-rowH/2,cw-2,Math.max(1,rowH-1));
+        ctx.globalAlpha=1;
+        // bid×ask text
+        if(cw>=44&&rowH>=9){
+          ctx.font='8px JetBrains Mono';
+          ctx.fillStyle='rgba(255,255,255,.7)';
+          ctx.textAlign='left';
+          // Make sure text fits vertically in the block
+          const textY = ry + 3;
+          if(row.bid>=.001)ctx.fillText(row.bid.toFixed(2),x+3,textY);
+          ctx.textAlign='right';
+          if(row.ask>=.001)ctx.fillText(row.ask.toFixed(2),x+cw-3,textY);
+        }
+      });
+    }
+
+    // ── Wick ──
+    ctx.strokeStyle=col;ctx.lineWidth=1.5;ctx.globalAlpha=.6;
+    ctx.beginPath();ctx.moveTo(x+cw/2,hy);ctx.lineTo(x+cw/2,ly);ctx.stroke();
+    ctx.globalAlpha=1;
+
+    // ── Body ──
+    const bodyTop=Math.min(oy,cy2);
+    const bodyH  =Math.max(Math.abs(cy2-oy),2);
+    ctx.fillStyle=col;ctx.globalAlpha=.22;
+    ctx.fillRect(x+1,bodyTop,cw-2,bodyH);
+    ctx.globalAlpha=1;
+    ctx.strokeStyle=col;ctx.lineWidth=1.5;
+    ctx.strokeRect(x+1.5,bodyTop+.5,cw-3,bodyH);
+
+    // ── POC ──
+    if(ST.overlays.poc&&candle.poc){
+      ctx.strokeStyle=C.yellow;ctx.lineWidth=1.5;ctx.setLineDash([2,2]);
+      ctx.beginPath();ctx.moveTo(x,py(candle.poc));ctx.lineTo(x+cw,py(candle.poc));ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    // ── Value Area ──
+    if(ST.overlays.va&&candle.vah&&candle.val&&candle.vah!==candle.val){
+      ctx.strokeStyle='rgba(92,107,192,.5)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+      ctx.strokeRect(x,py(candle.vah),cw,py(candle.val)-py(candle.vah));
+      ctx.setLineDash([]);
+    }
+
+    // ── Delta label ──
+    if(cw>=40){
+      const dTxt=(candle.delta>=0?'+':'')+candle.delta.toFixed(2);
+      ctx.font='bold 8px JetBrains Mono';
+      ctx.fillStyle=candle.delta>=0?C.buy:C.sell;
+      ctx.textAlign='center';
+      ctx.fillText(dTxt,x+cw/2,ly+11);
+    }
+
+    // ── Strategy markers ──
+    candle.signals.forEach((sig,si)=>{
+      const sx=x+cw/2; const sy=hy-14-si*14;
+      ctx.font='11px sans-serif';ctx.textAlign='center';
+      const map={absrev:[C.green,'★'],stackbo:[C.cyan,'⬆'],sweeptrap:['#FF1744','🪤'],lvnrej:['#76FF03','◆'],wallhold:[C.orange,'🧱']};
+      if(map[sig]){ctx.fillStyle=map[sig][0];ctx.fillText(map[sig][1],sx,sy);}
+    });
+
+    // ── Hover ──
+    if(ST.hoverCandleIdx===globalIdx){
+      ctx.strokeStyle='rgba(41,121,255,.55)';ctx.lineWidth=1;
+      ctx.strokeRect(x,hy-4,cw,ly-hy+8);
+    }
+  });
+
+  // ── Live price line ──
+  if(ST.currentCandle){
+    const lp=ST.currentCandle.close;
+    const lpy=py(lp);
+    ctx.strokeStyle=C.cyan;ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(0,lpy);ctx.lineTo(chartW,lpy);ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle=C.cyan;
+    ctx.fillRect(chartW+2,lpy-8,PSW-6,16);
+    ctx.fillStyle='#000';
+    ctx.font='bold 10px JetBrains Mono';ctx.textAlign='center';
+    ctx.fillText(pxFmt(lp),chartW+2+(PSW-6)/2,lpy+3.5);
+  }
+  ctx.textAlign='left';
+
+  // ── Price scale ──
+  if(psCtx){
+    psCtx.clearRect(0,0,PSW,H);
+    psCtx.fillStyle='rgba(6,8,16,.92)';psCtx.fillRect(0,0,PSW,H);
+    psCtx.strokeStyle=C.border;psCtx.lineWidth=1;
+    psCtx.beginPath();psCtx.moveTo(.5,0);psCtx.lineTo(.5,H);psCtx.stroke();
+    const range=adjHigh-adjLow;
+    const step=niceStep(range);
+    const start=Math.ceil(adjLow/step)*step;
+    psCtx.font='9px JetBrains Mono';psCtx.fillStyle=C.text2;psCtx.textAlign='right';
+    for(let p=start;p<=adjHigh;p=+(p+step).toFixed(10)){
+      const y=py(p);
+      if(y<5||y>H-5)continue;
+      psCtx.strokeStyle='rgba(20,30,48,.6)';
+      psCtx.beginPath();psCtx.moveTo(0,y);psCtx.lineTo(PSW,y);psCtx.stroke();
+      psCtx.fillStyle=C.text2;
+      psCtx.fillText(pxFmt(p),PSW-3,y+3);
+    }
+  }
+}
+
+function niceStep(range){
+  const raw=range/6; const mag=Math.pow(10,Math.floor(Math.log10(raw)));
+  const r=raw/mag;
+  let step;
+  if(r<1.5) step = mag; 
+  else if(r<3.5) step = 2*mag; 
+  else if(r<7.5) step = 5*mag; 
+  else step = 10*mag;
+  return Math.max(step, ST.tick);
+}
+
+// ─── Heatmap ───────────────────────────────────────────────
+function drawHeatmap(ctx, w, h) {
+  if(!w||!h) return;
+  ctx.fillStyle=C.bg1; ctx.fillRect(0,0,w,h);
+  const candles=[...ST.candles];
+  if(ST.currentCandle)candles.push(ST.currentCandle);
+  if(!candles.length)return;
+  const show=candles.slice(-100);
+  const colW=w/show.length;
+  let pHigh=-Infinity,pLow=Infinity,globalMax=0;
+  show.forEach(c=>{
+    pHigh=Math.max(pHigh,c.high);pLow=Math.min(pLow,c.low);
+    c.rows.forEach(r=>{globalMax=Math.max(globalMax,r.bid+r.ask);});
+  });
+  if(!globalMax) return;
+  const priceRange=pHigh-pLow||1;
+  show.forEach((c,ci)=>{
+    c.rows.forEach(row=>{
+      const vol=row.bid+row.ask;const pct=vol/globalMax;
+      const y=h*(1-(row.px-pLow)/priceRange);
+      let r=13,g=24,b=48;
+      if(pct>.8){r=255;g=214;b=0;}
+      else if(pct>.6){r=255;g=109;b=0;}
+      else if(pct>.35){r=41;g=121;b=255;}
+      else if(pct>.1){r=13;g=59;b=110;}
+      ctx.fillStyle=`rgb(${r},${g},${b})`;
+      ctx.fillRect(ci*colW,y-1.5,colW-1,3);
+    });
+    if(c.poc){
+      const y=h*(1-(c.poc-pLow)/priceRange);
+      ctx.fillStyle=C.yellow;ctx.fillRect(ci*colW+colW*.25,y-1,colW*.5,2);
+    }
+  });
+  if(ST.currentCandle){
+    const y=h*(1-(ST.currentCandle.close-pLow)/priceRange);
+    ctx.strokeStyle=C.cyan;ctx.lineWidth=1;ctx.setLineDash([2,2]);
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+// ─── CVD ───────────────────────────────────────────────────
+function drawCVD(ctx, w, h) {
+  if(!w||!h) return;
+  ctx.fillStyle=C.bg1;ctx.fillRect(0,0,w,h);
+  const hist=ST.cvdHistory.slice(-w);
+  if(hist.length<2) return;
+  const maxAbs=Math.max(...hist.map(Math.abs),.001);
+  const zeroY=h/2;
+  ctx.strokeStyle=C.border2;ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,zeroY);ctx.lineTo(w,zeroY);ctx.stroke();
+  ctx.beginPath();
+  hist.forEach((v,i)=>{
+    const x=(i/(hist.length-1))*w;
+    const y=zeroY-(v/maxAbs)*(h/2-4);
+    if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+  });
+  ctx.strokeStyle=ST.cvd>=0?C.buy:C.sell;ctx.lineWidth=1.5;ctx.stroke();
+  const lastY=zeroY-(hist[hist.length-1]/maxAbs)*(h/2-4);
+  ctx.lineTo(w,h);ctx.lineTo(0,h);ctx.closePath();
+  ctx.fillStyle=ST.cvd>=0?'rgba(38,166,154,.1)':'rgba(239,83,80,.1)';ctx.fill();
+  ctx.font='bold 9px JetBrains Mono';
+  ctx.fillStyle=ST.cvd>=0?C.buy:C.sell;ctx.textAlign='right';
+  ctx.fillText('CVD: '+(ST.cvd>=0?'+':'')+ST.cvd.toFixed(2),w-4,14);
+}
+
+// ─── Stats ─────────────────────────────────────────────────
+function updateStats(){
+  const p=ST.currentCandle?ST.currentCandle.close:simPrice;
+  document.getElementById('spPrice').textContent=pxFmt(p);
+  const d=ST.currentCandle?ST.currentCandle.delta:0;
+  const dEl=document.getElementById('spDelta');
+  dEl.textContent=(d>=0?'+':'')+d.toFixed(3);
+  dEl.className='chip-val '+(d>=0?'up':'dn');
+  const ce=document.getElementById('spCVD');
+  ce.textContent=(ST.cvd>=0?'+':'')+ST.cvd.toFixed(2);
+  ce.className='chip-val '+(ST.cvd>=0?'up':'dn');
+  document.getElementById('spTPS').textContent=ST.tps.toFixed(1);
+  document.getElementById('spVWAP').textContent=pxFmt(ST.vwapPrice);
+  document.getElementById('spSH').textContent=pxFmt(ST.sessionHigh);
+  document.getElementById('spSL').textContent=ST.sessionLow===Infinity?'—':pxFmt(ST.sessionLow);
+  const {bids,asks}=ST.dom;
+  if(bids.length&&asks.length){
+    const bv=bids.slice(0,5).reduce((a,b)=>a+b.sz,0);
+    const av=asks.slice(0,5).reduce((a,b)=>a+b.sz,0);
+    const ratio=(bv>av?(bv/av):(av/bv)).toFixed(2);
+    const de=document.getElementById('spDOM');
+    de.textContent=ratio+(bv>av?' B':' S');
+    de.className='chip-val '+(bv>av?'up':'dn');
+    document.getElementById('spSpread').textContent=bids[0]&&asks[0]?pxFmt(asks[0].px-bids[0].px):'—';
+  }
+  document.getElementById('tapeTPS').textContent=ST.tps.toFixed(1)+' t/s';
+  if(ST.fsMode){
+    document.getElementById('fsPriceTag').textContent=pxFmt(p);
+  }
+}
+
+// ─── Render loop ───────────────────────────────────────────
+let lastRender=0;
+function renderLoop(ts){
+  if(ts-lastRender>=50){
+    drawChart(mctx,psctx,dims.W,dims.H,xhctx);
+    drawHeatmap(hmctx,hmCanvas.width,hmCanvas.height);
+    drawCVD(cvctx,cvdCanvas.width,cvdCanvas.height);
+    if(ST.fsMode){
+      drawChart(fmctx,fpsctx,fsDims.W,fsDims.H,fxctx);
+      drawHeatmap(fhmctx,fsHmCanvas.width,fsHmCanvas.height);
+      drawCVD(fcvctx,fsCvdCanvas.width,fsCvdCanvas.height);
+    }
+    renderDOM();
+    updateStats();
+    lastRender=ts;
+  }
+  requestAnimationFrame(renderLoop);
+}
+
+// ─── Simulation tick ───────────────────────────────────────
+let candleEndTime=Date.now()+ST.interval*1000;
+let tickN=0;
+function tick(){
+  const now=Date.now();
+  const price=nextPrice();
+  const isBuy=Math.random()>.48;
+  const size=+(Math.random()*Math.random()*2+.001).toFixed(4);
+  if(ST.sessionHigh===0)ST.sessionHigh=price;
+  ST.sessionHigh=Math.max(ST.sessionHigh,price);
+  ST.sessionLow =Math.min(ST.sessionLow ,price);
+  ST.vwapSum+=price*size; ST.totalVol+=size;
+  ST.vwapPrice=+(ST.vwapSum/(ST.totalVol||1)).toFixed(ST.dec);
+  ST.cvd=+(ST.cvd+(isBuy?size:-size)).toFixed(4);
+  ST.cvdHistory.push(ST.cvd);
+  if(ST.cvdHistory.length>600)ST.cvdHistory.shift();
+  ST.tpsCount++;
+  if(now-ST.tpsTimer>=1000){ST.tps=ST.tpsCount;ST.tpsCount=0;ST.tpsTimer=now;}
+  if(!ST.currentCandle){ST.currentCandle=newCandle(price);candleEndTime=now+ST.interval*1000;}
+  updateCandle(ST.currentCandle,price,isBuy,size);
+  if(now>=candleEndTime){
+    closeCandle(ST.currentCandle);
+    ST.candles.push(ST.currentCandle);
+    if(ST.candles.length>300)ST.candles.shift();
+    if(Math.random()<.28){
+      const strategies=['absrev','stackbo','sweeptrap','lvnrej','wallhold','wallpull'];
+      const s=strategies[Math.floor(Math.random()*strategies.length)];
+      if(ST.candles.length)ST.candles[ST.candles.length-1].signals.push(s);
+      addSignal(s,price);
+    }
+    if(Math.random()<.4)refreshSetups(price);
+    ST.currentCandle=newCandle(price);
+    candleEndTime=now+ST.interval*1000;
+  }
+  if(tickN%3===0)buildDOM(price);
+  addTapeRow(now,price,size,isBuy);
+  if(Math.random()<.015){
+    const types=['sweep','imb','absorb','exhaust','iceberg','domimb'];
+    addSignal(types[Math.floor(Math.random()*types.length)],price);
+  }
+  tickN++;
+}
+function simLoop(){for(let i=0;i<2;i++)tick();setTimeout(simLoop,250);}
+
+// ─── Crosshair & Double Click ──────────────────────────────
+function attachCrosshair(wrap, ctx, W_fn, H_fn, psTag, timeTag, onHover) {
+  wrap.addEventListener('mousemove', e => {
+    const rect=wrap.getBoundingClientRect();
+    const mx=e.clientX-rect.left, my=e.clientY-rect.top;
+    const W=W_fn(), H=H_fn();
+    const chartW=W-PSW-4;
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='rgba(255,255,255,.18)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(0,my);ctx.lineTo(chartW,my);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(mx,0);ctx.lineTo(mx,H);ctx.stroke();
+    ctx.setLineDash([]);
+    
+    const allCandles=[...ST.candles];if(ST.currentCandle)allCandles.push(ST.currentCandle);
+    const vis=allCandles.slice(-60);
+    let pH=Math.max(...vis.map(c=>c.high))||simPrice+10*ST.tick;
+    let pL=Math.min(...vis.map(c=>c.low ))||simPrice-10*ST.tick;
+    const pd=(pH-pL)*.12||(3*ST.tick);pH+=pd;pL-=pd;
+    const adjH=pH+ST.priceOffset, adjL=pL+ST.priceOffset;
+    const priceAtY=adjH-(my/H)*(adjH-adjL);
+    
+    if(psTag){
+      psTag.style.display='block';
+      psTag.style.top=(my-8)+'px';
+      psTag.textContent=pxFmt(priceAtY);
+    }
+    const cw2=ST.candleWidth,gap2=ST.candleGap,totalW2=cw2+gap2;
+    const ci=Math.floor(mx/totalW2);
+    const visibleCount=Math.floor(chartW/totalW2);
+    const endIdx=Math.max(allCandles.length,visibleCount)-ST.scrollOffset;
+    const startIdx2=endIdx-visibleCount;
+    const realIdx=Math.max(0,startIdx2)+ci;
+    const candle=allCandles[realIdx];
+    ST.hoverCandleIdx=realIdx;
+    if(onHover)onHover(candle,e.clientX,e.clientY);
+  });
+  
+  wrap.addEventListener('mouseleave',()=>{
+    ctx.clearRect(0,0,W_fn(),H_fn());
+    if(psTag)psTag.style.display='none';
+    document.getElementById('tooltip').style.display='none';
+    ST.hoverCandleIdx=null;
+  });
+
+  // Double Click for Custom Price Level
+  wrap.addEventListener('dblclick', e => {
+    const rect=wrap.getBoundingClientRect();
+    const my=e.clientY-rect.top;
+    const H=H_fn();
+    const allCandles=[...ST.candles];if(ST.currentCandle)allCandles.push(ST.currentCandle);
+    const vis=allCandles.slice(-60);
+    let pH=Math.max(...vis.map(c=>c.high))||simPrice+10*ST.tick;
+    let pL=Math.min(...vis.map(c=>c.low ))||simPrice-10*ST.tick;
+    const pd=(pH-pL)*.12||(3*ST.tick);pH+=pd;pL-=pd;
+    const adjH=pH+ST.priceOffset, adjL=pL+ST.priceOffset;
+    const priceAtY=adjH-(my/H)*(adjH-adjL);
+
+    // Snap to tick precision
+    const snapped = Math.round(priceAtY / ST.tick) * ST.tick;
+    
+    // Check if clicking near an existing level to remove it
+    const existIdx = ST.customLevels.findIndex(l => Math.abs(l - snapped) < ST.tick * 2);
+    if (existIdx > -1) {
+      ST.customLevels.splice(existIdx, 1);
+    } else {
+      ST.customLevels.push(snapped);
+    }
+  });
+}
+
+function showTooltip(candle,cx,cy){
+  if(!candle)return;
+  const tt=document.getElementById('tooltip');
+  tt.style.display='block';
+  tt.style.left=Math.min(cx+15,window.innerWidth-240)+'px';
+  tt.style.top =Math.min(cy-30,window.innerHeight-320)+'px';
+  document.getElementById('ttPrice').textContent=pxFmt(candle.close);
+  document.getElementById('ttBid').textContent=candle.rows.reduce((a,r)=>a+r.bid,0).toFixed(4);
+  document.getElementById('ttAsk').textContent=candle.rows.reduce((a,r)=>a+r.ask,0).toFixed(4);
+  const de=document.getElementById('ttDelta');
+  de.textContent=(candle.delta>=0?'+':'')+candle.delta.toFixed(4);
+  de.className='tt-v '+(candle.delta>=0?'up':'dn');
+  document.getElementById('ttVol').textContent=candle.totalVol.toFixed(4);
+  document.getElementById('ttPOC').textContent=candle.poc?pxFmt(candle.poc):'—';
+  document.getElementById('ttVAH').textContent=candle.vah?pxFmt(candle.vah):'—';
+  document.getElementById('ttVAL').textContent=candle.val?pxFmt(candle.val):'—';
+  document.getElementById('ttSigs').textContent=candle.signals.length?candle.signals.join(', '):'—';
+}
+
+attachCrosshair(document.getElementById('chartWrap'), xhctx, ()=>dims.W, ()=>dims.H, document.getElementById('xhPriceTag'), document.getElementById('xhTimeTag'), showTooltip);
+attachCrosshair(document.getElementById('fsChartWrap'), fxctx, ()=>fsDims.W, ()=>fsDims.H, document.getElementById('fsXhPriceTag'), null, null);
+
+// ─── Wheel zoom/pan ────────────────────────────────────────
+function attachWheel(el){
+  el.addEventListener('wheel',e=>{
+    e.preventDefault();
+    if(e.ctrlKey||e.metaKey){
+      ST.candleWidth=Math.max(18,Math.min(130,ST.candleWidth-e.deltaY*.3));
+    } else {
+      const allC=[...ST.candles];if(ST.currentCandle)allC.push(ST.currentCandle);
+      const vis=allC.slice(-60);
+      const pH=Math.max(...vis.map(c=>c.high))||simPrice+10*ST.tick;
+      const pL=Math.min(...vis.map(c=>c.low ))||simPrice-10*ST.tick;
+      const step=(pH-pL)*.05;
+      ST.priceOffset+=e.deltaY>0?-step:step;
+    }
+  },{passive:false});
+}
+attachWheel(document.getElementById('chartWrap'));
+attachWheel(document.getElementById('fsChartWrap'));
+
+// ─── Scroll buttons ────────────────────────────────────────
+function scrollLeft(){ ST.scrollOffset=Math.min(ST.scrollOffset+5,Math.max(0,ST.candles.length-10)); }
+function scrollRight(){ ST.scrollOffset=Math.max(0,ST.scrollOffset-5); }
+function scrollToLatest(){ ST.scrollOffset=0; }
+function panUp(){
+  const allC=[...ST.candles];if(ST.currentCandle)allC.push(ST.currentCandle);
+  const vis=allC.slice(-60);
+  const pH=Math.max(...vis.map(c=>c.high))||simPrice+10*ST.tick;
+  const pL=Math.min(...vis.map(c=>c.low))||simPrice-10*ST.tick;
+  ST.priceOffset+=(pH-pL)*.08;
+}
+function panDn(){
+  const allC=[...ST.candles];if(ST.currentCandle)allC.push(ST.currentCandle);
+  const vis=allC.slice(-60);
+  const pH=Math.max(...vis.map(c=>c.high))||simPrice+10*ST.tick;
+  const pL=Math.min(...vis.map(c=>c.low))||simPrice-10*ST.tick;
+  ST.priceOffset-=(pH-pL)*.08;
+}
+function zoomIn() {ST.candleWidth=Math.min(130,ST.candleWidth+5);}
+function zoomOut(){ST.candleWidth=Math.max(18,ST.candleWidth-5);}
+
+document.getElementById('btnScrollLeft').onclick  = scrollLeft;
+document.getElementById('btnScrollRight').onclick = scrollRight;
+document.getElementById('btnPanLeft').onclick      = scrollLeft;
+document.getElementById('btnPanRight').onclick     = scrollRight;
+document.getElementById('btnReset').onclick        = scrollToLatest;
+document.getElementById('btnUp').onclick           = panUp;
+document.getElementById('btnDn').onclick           = panDn;
+document.getElementById('btnZoomIn').onclick       = zoomIn;
+document.getElementById('btnZoomOut').onclick      = zoomOut;
+
+document.getElementById('fsBtnScrollLeft').onclick  = scrollLeft;
+document.getElementById('fsBtnScrollRight').onclick = scrollRight;
+document.getElementById('fsBtnPanLeft').onclick     = scrollLeft;
+document.getElementById('fsBtnPanRight').onclick    = scrollRight;
+document.getElementById('fsBtnReset').onclick       = scrollToLatest;
+document.getElementById('fsBtnUp').onclick          = panUp;
+document.getElementById('fsBtnDn').onclick          = panDn;
+document.getElementById('fsBtnZoomIn').onclick      = zoomIn;
+document.getElementById('fsBtnZoomOut').onclick     = zoomOut;
+
+// ─── Fullscreen ────────────────────────────────────────────
+const fsOverlay = document.getElementById('fsOverlay');
+document.getElementById('btnFS').onclick = () => {
+  ST.fsMode = true;
+  fsOverlay.classList.add('active');
+  setTimeout(()=>{resizeFS();},10);
+};
+document.getElementById('btnExitFS').onclick = () => {
+  ST.fsMode = false;
+  fsOverlay.classList.remove('active');
+};
+document.addEventListener('keydown', e => {
+  if(e.key==='Escape'&&ST.fsMode){
+    ST.fsMode=false;
+    fsOverlay.classList.remove('active');
+  }
+});
+
+// ─── Toolbar toggles ───────────────────────────────────────
+const ovMap={btnVWAP:'vwap',btnPOC:'poc',btnVA:'va',btnSHL:'shl',btnDiag:'diag',btnVP:'vp',btnHVN:'hvn',btnDOMOv:'dom',btnLiq:'liq'};
+const strMap={btnAR:'ar',btnSB:'sb',btnST:'st',btnLVN:'lvn',btnWR:'wr'};
+Object.entries(ovMap).forEach(([id,k])=>{
+  document.getElementById(id).addEventListener('click',function(){
+    ST.overlays[k]=!ST.overlays[k];this.classList.toggle('on',ST.overlays[k]);
+  });
+});
+Object.entries(strMap).forEach(([id,k])=>{
+  document.getElementById(id).addEventListener('click',function(){
+    ST.strategies[k]=!ST.strategies[k];this.classList.toggle('on',ST.strategies[k]);
+  });
+});
+
+// ─── REBOOT DATA LOGIC ─────────────────────────────────────
+function rebootData() {
+  ST.sessionHigh=0; ST.sessionLow=Infinity;
+  ST.vwapSum=0; ST.totalVol=0; ST.cvd=0; ST.cvdHistory=[];
+  ST.candles=[]; ST.currentCandle=null; ST.scrollOffset=0;
+  ST.priceOffset=0;
+  setupBody.innerHTML=''; signalBody.innerHTML='';
+  tapeBody.innerHTML='';
+  
+  const now = Date.now();
+  for(let i=35;i>=1;i--){
+    const c=newCandle(simPrice);
+    c.time=now-i*ST.interval*1000;
+    const ticks = ST.interval < 60 ? 40 : ST.interval < 300 ? 100 : 250; 
+    for(let t=0;t<ticks;t++){
+      const p=nextPrice(); const buy=Math.random()>.48;
+      const sz=+(Math.random()*.5+.001).toFixed(4);
+      updateCandle(c,p,buy,sz);
+      ST.cvd=+(ST.cvd+(buy?sz:-sz)).toFixed(4);
+      ST.cvdHistory.push(ST.cvd);
+    }
+    closeCandle(c);
+    ST.candles.push(c);
+    ST.sessionHigh=Math.max(ST.sessionHigh||0,c.high);
+    ST.sessionLow =Math.min(ST.sessionLow===Infinity?c.low:ST.sessionLow,c.low);
+    ST.vwapSum+=c.close*c.totalVol; ST.totalVol+=c.totalVol;
+  }
+  ST.vwapPrice=+(ST.vwapSum/(ST.totalVol||1)).toFixed(ST.dec);
+  candleEndTime = Date.now() + ST.interval*1000;
+  for(let i=0;i<4;i++)refreshSetups(simPrice);
+}
+
+// TF buttons
+document.getElementById('tfGroup').addEventListener('click',e=>{
+  const btn=e.target.closest('.tf-btn');if(!btn)return;
+  document.querySelectorAll('.tf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  ST.interval=+btn.dataset.s;
+  rebootData();
+});
+
+// Sym select
+document.getElementById('symSel').addEventListener('change',e=>{
+  const sym = e.target.value.toUpperCase();
+  ST.symbol = sym;
+  
+  if(sym === 'BTCUSDT') { ST.dec = 1; ST.tick = 0.1; simPrice = 67900; }
+  else if(sym === 'ETHUSDT') { ST.dec = 2; ST.tick = 0.01; simPrice = 3450; }
+  else if(sym === 'SOLUSDT') { ST.dec = 2; ST.tick = 0.01; simPrice = 145; }
+  else if(sym === 'BNBUSDT') { ST.dec = 1; ST.tick = 0.1; simPrice = 590; }
+  else if(sym === 'XRPUSDT') { ST.dec = 4; ST.tick = 0.0001; simPrice = 0.62; }
+  
+  ST.customLevels = []; // Clear custom drawing levels on new asset
+  rebootData();
+});
+
+// ─── Panel resizers ────────────────────────────────────────
+function makeResizer(resId, topEl){
+  const res=document.getElementById(resId);
+  const top=document.getElementById(topEl);
+  let drag=false,startY,startH;
+  res.addEventListener('mousedown',e=>{drag=true;startY=e.clientY;startH=top.offsetHeight;document.body.style.cursor='row-resize';e.preventDefault();});
+  document.addEventListener('mousemove',e=>{if(!drag)return;const dy=e.clientY-startY;top.style.flex='none';top.style.height=Math.max(60,startH+dy)+'px';});
+  document.addEventListener('mouseup',()=>{drag=false;document.body.style.cursor='';});
+}
+makeResizer('domResize','domWrap');
+makeResizer('sigResize','setupWrap');
+
+// ─── Boot ──────────────────────────────────────────────────
+function boot(){
+  resizeAll();
+  rebootData();
+  document.getElementById('connDot').className='conn-dot live';
+  document.getElementById('connLbl').textContent='LIVE';
+  simLoop();
+  requestAnimationFrame(renderLoop);
+}
+window.addEventListener('resize',resizeAll);
+window.addEventListener('load',boot);
+</script>
+</body>
+</html>

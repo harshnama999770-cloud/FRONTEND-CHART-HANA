@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hana Chart – Advanced Footprint Charts</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg-primary: #0a0b0e;
+    --bg-secondary: #0f1117;
+    --bg-card: #13151c;
+    --bg-card2: #181b24;
+    --border: #1e2233;
+    --border-light: #252a3a;
+    --accent: #00d4a8;
+    --accent-dim: rgba(0,212,168,0.12);
+    --accent-glow: rgba(0,212,168,0.25);
+    --red: #f0404a;
+    --green: #00d4a8;
+    --blue: #4f8ef7;
+    --yellow: #f5c842;
+    --text-primary: #e8eaf0;
+    --text-secondary: #7e8599;
+    --text-muted: #4a5068;
+    --font: 'Space Grotesk', sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg-primary); }
+  ::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 3px; }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 48px;
+    height: 64px;
+    background: rgba(10,11,14,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-size: 18px; font-weight: 700; letter-spacing: -0.3px;
+    color: var(--text-primary);
+  }
+  .nav-logo span { color: var(--accent); }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 36px; list-style: none;
+  }
+  .nav-links a {
+    font-size: 13.5px; font-weight: 500; color: var(--text-secondary);
+    text-decoration: none; letter-spacing: 0.2px;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text-primary); }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: #06120f;
+    font-family: var(--font); font-size: 13.5px; font-weight: 600;
+    border: none; border-radius: 7px;
+    padding: 9px 20px; cursor: pointer; text-decoration: none;
+    transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+    white-space: nowrap;
+  }
+  .btn-primary:hover {
+    opacity: 0.9; transform: translateY(-1px);
+    box-shadow: 0 4px 20px var(--accent-glow);
+  }
+
+  .btn-ghost {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent; color: var(--text-primary);
+    font-family: var(--font); font-size: 13.5px; font-weight: 500;
+    border: 1px solid var(--border-light); border-radius: 7px;
+    padding: 9px 20px; cursor: pointer; text-decoration: none;
+    transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  }
+  .btn-ghost:hover {
+    border-color: var(--accent); background: var(--accent-dim);
+    transform: translateY(-1px);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    min-height: 100vh;
+    padding: 140px 48px 80px;
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(0,212,168,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent-dim); border: 1px solid rgba(0,212,168,0.25);
+    border-radius: 100px; padding: 5px 14px; margin-bottom: 28px;
+    font-size: 12px; font-weight: 500; color: var(--accent); letter-spacing: 0.5px;
+    font-family: var(--mono);
+    animation: fadeInDown 0.6s ease both;
+  }
+  .hero-badge span { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse 2s infinite; }
+
+  @keyframes pulse {
+    0%,100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+
+  h1 {
+    font-size: clamp(32px, 5vw, 60px);
+    font-weight: 700; line-height: 1.1; letter-spacing: -1.5px;
+    max-width: 780px;
+    animation: fadeInDown 0.7s 0.1s ease both;
+  }
+  h1 em { font-style: normal; color: var(--accent); }
+
+  .hero-sub {
+    font-size: 17px; color: var(--text-secondary); max-width: 560px;
+    margin: 20px 0 36px; line-height: 1.7;
+    animation: fadeInDown 0.7s 0.2s ease both;
+  }
+
+  .hero-ctas {
+    display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+    animation: fadeInDown 0.7s 0.3s ease both;
+  }
+  .hero-ctas .btn-primary { font-size: 15px; padding: 12px 28px; border-radius: 8px; }
+  .hero-ctas .btn-ghost { font-size: 15px; padding: 12px 28px; border-radius: 8px; }
+
+  /* ── CHART MOCKUP ── */
+  .chart-mockup-wrapper {
+    margin-top: 64px; width: 100%; max-width: 1000px;
+    border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 0 80px rgba(0,0,0,0.6), 0 0 40px rgba(0,212,168,0.05);
+    animation: fadeInUp 0.8s 0.4s ease both;
+    position: relative;
+  }
+
+  .mockup-topbar {
+    background: #0d0f16; padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #f0404a; } .dot.y { background: #f5c842; } .dot.g { background: #00d4a8; }
+  .mockup-tabs { display: flex; gap: 2px; margin-left: 14px; }
+  .mockup-tab {
+    font-size: 11px; font-family: var(--mono); color: var(--text-muted);
+    background: var(--bg-card); padding: 4px 14px; border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+  .mockup-tab.active { color: var(--text-primary); background: var(--bg-card2); border-color: var(--border-light); }
+  .mockup-pair { font-size: 12px; font-family: var(--mono); color: var(--text-secondary); margin-left: auto; }
+  .mockup-pair strong { color: var(--accent); font-size: 13px; }
+
+  .chart-canvas {
+    background: #0c0e15; padding: 0;
+    display: flex;
+  }
+
+  /* Footprint chart SVG area */
+  .fp-chart {
+    flex: 1; padding: 16px 8px; overflow: hidden; position: relative;
+  }
+
+  .fp-row {
+    display: flex; align-items: center; height: 26px; margin-bottom: 1px;
+  }
+  .fp-price {
+    width: 68px; font-family: var(--mono); font-size: 10.5px;
+    color: var(--text-muted); text-align: right; padding-right: 8px; flex-shrink: 0;
+  }
+  .fp-cell {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: var(--mono); font-size: 10px; font-weight: 500;
+    border-radius: 3px; padding: 0 7px; height: 22px; min-width: 90px;
+    flex-shrink: 0;
+  }
+  .fp-cell .bid { color: #f0404a; }
+  .fp-cell .ask { color: #00d4a8; }
+  .fp-cell .sep { color: var(--text-muted); margin: 0 3px; }
+
+  .fp-bar-wrap { flex: 1; padding: 0 6px; display: flex; align-items: center; }
+  .fp-bar { height: 10px; border-radius: 2px; min-width: 2px; }
+
+  .imb-tag {
+    font-family: var(--mono); font-size: 9px; font-weight: 600;
+    background: rgba(245,200,66,0.18); color: var(--yellow);
+    border: 1px solid rgba(245,200,66,0.3);
+    padding: 1px 5px; border-radius: 3px; margin-left: 4px; white-space: nowrap;
+  }
+
+  .delta-col {
+    width: 72px; font-family: var(--mono); font-size: 10.5px; font-weight: 600;
+    text-align: right; padding-right: 8px; flex-shrink: 0;
+  }
+  .delta-col.pos { color: #00d4a8; } .delta-col.neg { color: #f0404a; }
+
+  /* Right panel */
+  .side-panel {
+    width: 190px; background: #0a0c12; border-left: 1px solid var(--border);
+    padding: 14px 12px; display: flex; flex-direction: column; gap: 14px;
+  }
+  .panel-label {
+    font-size: 9px; font-family: var(--mono); letter-spacing: 1px;
+    color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .stat-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 5px;
+  }
+  .stat-label { font-size: 10.5px; color: var(--text-muted); }
+  .stat-val { font-family: var(--mono); font-size: 11px; font-weight: 600; }
+  .stat-val.green { color: var(--green); } .stat-val.red { color: var(--red); }
+  .stat-val.blue { color: var(--blue); }
+
+  .mini-divider { border: none; border-top: 1px solid var(--border); }
+
+  .vol-bar-wrap { display: flex; flex-direction: column; gap: 4px; }
+  .vol-row { display: flex; align-items: center; gap: 6px; }
+  .vol-label { font-size: 9px; font-family: var(--mono); color: var(--text-muted); width: 22px; }
+  .vol-bar-bg { flex: 1; height: 7px; background: var(--bg-card); border-radius: 2px; overflow: hidden; }
+  .vol-fill { height: 100%; border-radius: 2px; }
+
+  .mockup-statusbar {
+    background: #0a0c12; border-top: 1px solid var(--border);
+    display: flex; align-items: center; gap: 20px; padding: 6px 16px;
+  }
+  .status-item { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+  .status-item span { color: var(--text-secondary); margin-left: 4px; }
+
+  @keyframes fadeInDown {
+    from { opacity:0; transform:translateY(-14px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  @keyframes fadeInUp {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── SECTIONS SHARED ── */
+  section { padding: 100px 48px; }
+  .section-label {
+    font-size: 11px; font-family: var(--mono); letter-spacing: 2px;
+    color: var(--accent); text-transform: uppercase; margin-bottom: 14px;
+  }
+  h2 {
+    font-size: clamp(26px, 3.5vw, 40px);
+    font-weight: 700; letter-spacing: -1px; line-height: 1.15;
+  }
+  h2 em { font-style: normal; color: var(--accent); }
+  .section-sub {
+    font-size: 16px; color: var(--text-secondary); max-width: 520px;
+    margin-top: 14px; line-height: 1.7;
+  }
+
+  /* ── FEATURES ── */
+  #features { background: var(--bg-secondary); }
+  .features-header { text-align: center; margin-bottom: 60px; }
+  .features-header .section-sub { margin-left: auto; margin-right: auto; }
+
+  .features-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px; max-width: 1100px; margin: 0 auto;
+  }
+
+  .feat-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 28px;
+    transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+    cursor: default;
+  }
+  .feat-card:hover {
+    border-color: rgba(0,212,168,0.35);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.35), 0 0 20px rgba(0,212,168,0.04);
+  }
+
+  .feat-icon {
+    width: 42px; height: 42px; border-radius: 10px;
+    background: var(--accent-dim); border: 1px solid rgba(0,212,168,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; margin-bottom: 18px;
+  }
+  .feat-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 10px; }
+  .feat-card p { font-size: 13.5px; color: var(--text-secondary); line-height: 1.65; }
+
+  /* ── CHART PREVIEW ── */
+  #preview { background: var(--bg-primary); }
+  .preview-inner {
+    display: flex; align-items: center; gap: 64px;
+    max-width: 1100px; margin: 0 auto;
+  }
+  .preview-text { flex: 1; }
+  .preview-visual { flex: 1.4; }
+
+  .preview-points { margin-top: 28px; display: flex; flex-direction: column; gap: 14px; }
+  .preview-point {
+    display: flex; gap: 14px; align-items: flex-start;
+  }
+  .pp-dot {
+    width: 6px; height: 6px; background: var(--accent);
+    border-radius: 50%; flex-shrink: 0; margin-top: 6px;
+  }
+  .pp-text { font-size: 14px; color: var(--text-secondary); line-height: 1.6; }
+  .pp-text strong { color: var(--text-primary); }
+
+  /* Wide chart mockup */
+  .wide-chart {
+    border-radius: 12px; overflow: hidden;
+    border: 1px solid var(--border-light);
+    box-shadow: 0 24px 80px rgba(0,0,0,0.5), 0 0 30px rgba(0,212,168,0.04);
+  }
+  .wide-chart-body {
+    background: #0c0e15; height: 320px;
+    display: flex; flex-direction: column; padding: 16px;
+    position: relative; overflow: hidden;
+  }
+
+  /* Candles SVG */
+  .candle-area { flex: 1; position: relative; }
+  .price-line {
+    position: absolute; right: 0; left: 0;
+    border-top: 1px dashed rgba(0,212,168,0.35);
+    display: flex; align-items: center; justify-content: flex-end;
+  }
+  .price-tag {
+    background: var(--accent); color: #06120f;
+    font-family: var(--mono); font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 3px;
+  }
+
+  /* SVG candle chart */
+  svg.candles { width: 100%; height: 240px; }
+
+  /* ── TRADE IDEAS ── */
+  #ideas { background: var(--bg-secondary); }
+  .ideas-header { text-align: center; margin-bottom: 56px; }
+
+  .ideas-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 22px; max-width: 1100px; margin: 0 auto;
+  }
+
+  .idea-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  }
+  .idea-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+    border-color: var(--border-light);
+  }
+
+  .idea-header {
+    padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .idea-pair { font-size: 15px; font-weight: 700; font-family: var(--mono); }
+  .idea-dir {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
+    padding: 3px 10px; border-radius: 4px; font-family: var(--mono);
+  }
+  .idea-dir.long { background: rgba(0,212,168,0.15); color: var(--green); border: 1px solid rgba(0,212,168,0.25); }
+  .idea-dir.short { background: rgba(240,64,74,0.12); color: var(--red); border: 1px solid rgba(240,64,74,0.2); }
+
+  .idea-body { padding: 18px 20px; }
+  .idea-levels {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px;
+  }
+  .level-item { display: flex; flex-direction: column; gap: 3px; }
+  .level-label { font-size: 9.5px; font-family: var(--mono); letter-spacing: 1px; color: var(--text-muted); text-transform: uppercase; }
+  .level-val { font-size: 14px; font-family: var(--mono); font-weight: 600; }
+  .level-val.entry { color: var(--blue); }
+  .level-val.sl { color: var(--red); }
+  .level-val.tp { color: var(--green); }
+
+  .idea-reasoning {
+    font-size: 12.5px; color: var(--text-secondary); line-height: 1.6;
+    border-top: 1px solid var(--border); padding-top: 14px;
+  }
+  .idea-tag {
+    display: inline-block; font-size: 10px; font-family: var(--mono);
+    background: rgba(79,142,247,0.12); color: var(--blue);
+    border: 1px solid rgba(79,142,247,0.2); padding: 2px 8px; border-radius: 4px;
+    margin-right: 5px; margin-bottom: 5px;
+  }
+  .idea-tags { margin-bottom: 10px; }
+
+  /* ── CTA ── */
+  #cta {
+    background: var(--bg-primary);
+    text-align: center;
+    position: relative; overflow: hidden;
+  }
+  #cta::before {
+    content: '';
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 600px; height: 400px;
+    background: radial-gradient(ellipse, rgba(0,212,168,0.07) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .cta-inner { position: relative; max-width: 600px; margin: 0 auto; }
+  .cta-inner h2 { font-size: clamp(28px, 4vw, 46px); }
+  .cta-inner .section-sub { margin: 16px auto 36px; }
+  .cta-inner .btn-primary { font-size: 16px; padding: 14px 36px; border-radius: 9px; }
+
+  /* ── FOOTER ── */
+  footer {
+    background: #080910; border-top: 1px solid var(--border);
+    padding: 48px;
+  }
+  .footer-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; flex-direction: column; gap: 32px;
+  }
+  .footer-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 28px; }
+  .footer-logo { font-size: 18px; font-weight: 700; }
+  .footer-logo span { color: var(--accent); }
+  .footer-tagline { font-size: 12.5px; color: var(--text-muted); margin-top: 6px; }
+
+  .footer-links { display: flex; gap: 52px; flex-wrap: wrap; }
+  .footer-col h4 { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); font-family: var(--mono); margin-bottom: 14px; }
+  .footer-col a { display: block; font-size: 13px; color: var(--text-secondary); text-decoration: none; margin-bottom: 9px; transition: color 0.2s; }
+  .footer-col a:hover { color: var(--accent); }
+
+  .footer-bottom {
+    border-top: 1px solid var(--border); padding-top: 24px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .footer-bottom p { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+  .footer-copy { font-family: var(--mono); font-size: 11px; color: var(--text-muted); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    nav { padding: 0 20px; }
+    .nav-links { display: none; }
+    section { padding: 72px 20px; }
+    .hero { padding: 120px 20px 60px; }
+    .preview-inner { flex-direction: column; gap: 40px; }
+    .side-panel { display: none; }
+    footer { padding: 36px 20px; }
+    .footer-top { flex-direction: column; }
+  }
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+}
+
+.logo-img {
+  width: 40px;
+  height: auto;
+  filter: brightness(0) invert(1);
+}
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav>
+  <div class="nav-logo">
+    <img src="harshLogo.svg" alt="Logo" class="logo-img">
+    <span>Hana Chart</span>
+  </div>
+
+  <ul class="nav-links">
+    <li><a href="index.html">Home</a></li>
+    <li><a href="homepage.html">Chart</a></li>
+    <li><a href="prediction.html">Prediction</a></li>
+  </ul>
+
+  <a href="" class=""></a>
+</nav>
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-badge"><span></span>Now Live — Real-Time Order Flow</div>
+  <h1>Advanced Footprint Charts<br>for <em>Order Flow</em> Traders</h1>
+  <p class="hero-sub">
+    Analyze bid/ask volume, cumulative delta, and price-level imbalances tick-by-tick. 
+    See exactly where institutions are active — before the move happens.
+  </p>
+  <div class="hero-ctas">
+  <a href="homepage.html" class="btn-primary">
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+    <path d="M6 5.5l4.5 2.5-4.5 2.5V5.5z" fill="currentColor"/>
+  </svg>
+  Open Chart
+</a>
+    <a href="#features" class="btn-ghost">Learn More ↓</a>
+  </div>
+
+  <!-- Footprint Chart Mockup -->
+  <div class="chart-mockup-wrapper">
+    <div class="mockup-topbar">
+      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      <div class="mockup-tabs">
+        <div class="mockup-tab active">Footprint</div>
+        <div class="mockup-tab">Delta</div>
+        <div class="mockup-tab">Volume Profile</div>
+      </div>
+      <div class="mockup-pair">ES <strong>5,642.25</strong> &nbsp;·&nbsp; 1m &nbsp;·&nbsp; CME</div>
+    </div>
+
+    <div class="chart-canvas">
+      <div class="fp-chart">
+        <!-- Footprint rows: price | bid x ask | delta bar | delta val -->
+        <!-- Row macro data: price, bid, ask, barWidth bid%, ask%, deltaSign, delta, imbalance tag -->
+        <div class="fp-row">
+          <div class="fp-price">5642.50</div>
+          <div class="fp-cell" style="background:rgba(0,212,168,0.08)"><span class="bid">182</span><span class="sep">×</span><span class="ask">347</span></div>
+          <div class="fp-bar-wrap">
+            <div class="fp-bar" style="width:28%;background:rgba(240,64,74,0.55)"></div>
+            <div style="width:6px"></div>
+            <div class="fp-bar" style="width:54%;background:rgba(0,212,168,0.55)"></div>
+          </div>
+          <div class="delta-col pos">+165</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">5642.25</div>
+          <div class="fp-cell" style="background:rgba(0,212,168,0.13)"><span class="bid">96</span><span class="sep">×</span><span class="ask">412</span></div>
+          <div class="fp-bar-wrap">
+            <div class="fp-bar" style="width:14%;background:rgba(240,64,74,0.55)"></div>
+            <div style="width:6px"></div>
+            <div class="fp-bar" style="width:62%;background:rgba(0,212,168,0.55)"></div>
+            <div class="imb-tag">↑ IMB</div>
+          </div>
+          <div class="delta-col pos">+316</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">5642.00</div>
+          <div class="fp-cell"><span class="bid">224</span><span class="sep">×</span><span class="ask">219</span></div>
+          <div class="fp-bar-wrap">
+            <div class="fp-bar" style="width:38%;background:rgba(240,64,74,0.4)"></div>
+            <div style="width:6px"></div>
+            <div class="fp-bar" style="width:37%;background:rgba(0,212,168,0.4)"></div>
+          </div>
+          <div class="delta-col neg">-5</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">5641.75</div>
+          <div class="fp-cell" style="background:rgba(240,64,74,0.07)"><span class="bid">489</span><span class="sep">×</span><span class="ask">201</span></div>
+          <div class="fp-bar-wrap">
+            <div class="fp-bar" style="width:68%;background:rgba(240,64,74,0.55)"></div>
+            <div style="width:6px"></div>
+            <div class="fp-bar" style="width:28%;background:rgba(0,212,168,0.4)"></div>
+          </div>
+          <div class="delta-col neg">-288</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">5641.50</div>
+          <div class="fp-cell" style="background:rgba(240,64,74,0.12)"><span class="bid">611</span><span class="sep">×</span><span class="ask">138</span></div>
+          <div class="fp-bar-wrap">
+            <div class="fp-bar" style="width:80%;background:rgba(240,64,74,0.6)"></div>
+            <div style="width:6px"></div>
+            <div class="fp-bar" style="width:18%;background:rgba(0,212,168,0.4)"></div>
+            <div class="imb-tag" style="background:rgba(240,64,74,0.15);color:#f0404a;border-color:rgba(240,64,74,0.3)">↓ IMB</div>
+          </div>
+          <div class="delta-col neg">-473</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">5641.25</div>
+          <div class="fp-cell"><span class="bid">310</span><span class="sep">×</span><span class="ask">295</span></div>
+          <div class="fp-bar-wrap">
+            <div class="fp-bar" style="width:45%;background:rgba(240,64,74,0.45)"></div>
+            <div style="width:6px"></div>
+            <div class="fp-bar" style="width:43%;background:rgba(0,212,168,0.45)"></div>
+          </div>
+          <div class="delta-col neg">-15</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">5641.00</div>
+          <div class="fp-cell" style="background:rgba(0,212,168,0.06)"><span class="bid">148</span><span class="sep">×</span><span class="ask">330</span></div>
+          <div class="fp-bar-wrap">
+            <div class="fp-bar" style="width:22%;background:rgba(240,64,74,0.4)"></div>
+            <div style="width:6px"></div>
+            <div class="fp-bar" style="width:49%;background:rgba(0,212,168,0.5)"></div>
+          </div>
+          <div class="delta-col pos">+182</div>
+        </div>
+        <div class="fp-row">
+          <div class="fp-price">5640.75</div>
+          <div class="fp-cell" style="background:rgba(0,212,168,0.1)"><span class="bid">87</span><span class="sep">×</span><span class="ask">502</span></div>
+          <div class="fp-bar-wrap">
+            <div class="fp-bar" style="width:12%;background:rgba(240,64,74,0.4)"></div>
+            <div style="width:6px"></div>
+            <div class="fp-bar" style="width:73%;background:rgba(0,212,168,0.6)"></div>
+            <div class="imb-tag">↑ IMB</div>
+          </div>
+          <div class="delta-col pos">+415</div>
+        </div>
+      </div>
+
+      <div class="side-panel">
+        <div>
+          <div class="panel-label">Current Bar</div>
+          <div class="stat-row"><span class="stat-label">Total Vol</span><span class="stat-val blue">12,847</span></div>
+          <div class="stat-row"><span class="stat-label">Buy Vol</span><span class="stat-val green">7,441</span></div>
+          <div class="stat-row"><span class="stat-label">Sell Vol</span><span class="stat-val red">5,406</span></div>
+          <div class="stat-row"><span class="stat-label">Delta</span><span class="stat-val green">+2,035</span></div>
+        </div>
+        <hr class="mini-divider"/>
+        <div>
+          <div class="panel-label">Session Delta</div>
+          <div class="stat-row"><span class="stat-label">Cum. Delta</span><span class="stat-val green">+8,240</span></div>
+          <div class="stat-row"><span class="stat-label">Max Delta</span><span class="stat-val green">+9,102</span></div>
+          <div class="stat-row"><span class="stat-label">Min Delta</span><span class="stat-val red">-1,540</span></div>
+        </div>
+        <hr class="mini-divider"/>
+        <div>
+          <div class="panel-label">Volume Split</div>
+          <div class="vol-bar-wrap">
+            <div class="vol-row">
+              <span class="vol-label" style="color:var(--green)">Buy</span>
+              <div class="vol-bar-bg"><div class="vol-fill" style="width:58%;background:var(--green);opacity:0.7"></div></div>
+              <span style="font-family:var(--mono);font-size:9px;color:var(--green)">58%</span>
+            </div>
+            <div class="vol-row">
+              <span class="vol-label" style="color:var(--red)">Sell</span>
+              <div class="vol-bar-bg"><div class="vol-fill" style="width:42%;background:var(--red);opacity:0.7"></div></div>
+              <span style="font-family:var(--mono);font-size:9px;color:var(--red)">42%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mockup-statusbar">
+      <div class="status-item">PRICE<span>5,642.25</span></div>
+      <div class="status-item">CHANGE<span style="color:var(--green)">+12.75</span></div>
+      <div class="status-item">SESSION VOL<span>1.24M</span></div>
+      <div class="status-item">IMBALANCES<span style="color:var(--yellow)">4 Active</span></div>
+      <div class="status-item" style="margin-left:auto">● LIVE</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ── -->
+<section id="features">
+  <div class="features-header">
+    <div class="section-label">Platform Features</div>
+    <h2>Everything an order flow trader needs</h2>
+    <p class="section-sub">Built from the ground up for traders who read the tape — not just the candles.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feat-card">
+      <div class="feat-icon">📊</div>
+      <h3>Footprint Chart</h3>
+      <p>Visualize bid and ask volume traded at every price level within each candle. See the full auction process as it unfolds.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">⚡</div>
+      <h3>Volume Delta</h3>
+      <p>Instantly understand buying vs. selling pressure. Track cumulative delta across bars to confirm or diverge from price movement.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🎯</div>
+      <h3>Imbalance Detection</h3>
+      <p>Automatically highlight price levels where aggressive buyers or sellers overwhelm the opposite side — signaling directional intent.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🏛️</div>
+      <h3>Stacked Imbalances</h3>
+      <p>Spot clusters of consecutive imbalances — the footprint of institutional activity and high-conviction order placement zones.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🔁</div>
+      <h3>Real-Time Order Flow</h3>
+      <p>Tick-by-tick market data with sub-second rendering. Never lag behind the market again — analyze as trades print.</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📈</div>
+      <h3>Volume Profile</h3>
+      <p>Session, daily, and custom range volume profiles overlaid directly on footprint data. Identify value areas and point of control in context.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── CHART PREVIEW ── -->
+<section id="preview">
+  <div class="preview-inner">
+    <div class="preview-text">
+      <div class="section-label">Deep Market Insight</div>
+      <h2>See the market the way <em>institutions</em> do</h2>
+      <p class="section-sub">
+        Hana Chart gives you an X-ray view of the order book. 
+        Stop guessing — start reading what's actually happening inside every candle.
+      </p>
+      <div class="preview-points">
+        <div class="preview-point">
+          <div class="pp-dot"></div>
+          <div class="pp-text"><strong>Price-level bid/ask data</strong> — know exactly where volume traded on each side of the market.</div>
+        </div>
+        <div class="preview-point">
+          <div class="pp-dot"></div>
+          <div class="pp-text"><strong>Delta divergence alerts</strong> — catch when price rises but delta is falling, and vice versa.</div>
+        </div>
+        <div class="preview-point">
+          <div class="pp-dot"></div>
+          <div class="pp-text"><strong>Multi-timeframe context</strong> — combine footprint with higher-TF structure for precision entries.</div>
+        </div>
+        <div class="preview-point">
+          <div class="pp-dot"></div>
+          <div class="pp-text"><strong>No lag, no noise</strong> — pure raw market data rendered at tick resolution.</div>
+        </div>
+      </div>
+    </div>
+    <div class="preview-visual">
+      <div class="wide-chart">
+        <div class="mockup-topbar">
+          <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          <div class="mockup-tabs" style="margin-left:14px">
+            <div class="mockup-tab active">NQ · 5m</div>
+            <div class="mockup-tab">Volume Delta</div>
+          </div>
+          <div class="mockup-pair" style="margin-left:auto">NQ &nbsp;<strong style="color:#f0404a">19,820.50</strong> &nbsp;▼ -34.25</div>
+        </div>
+        <div class="wide-chart-body">
+          <svg class="candles" viewBox="0 0 620 220" preserveAspectRatio="none">
+            <!-- Grid lines -->
+            <line x1="0" y1="44" x2="620" y2="44" stroke="#1a1d28" stroke-width="1"/>
+            <line x1="0" y1="88" x2="620" y2="88" stroke="#1a1d28" stroke-width="1"/>
+            <line x1="0" y1="132" x2="620" y2="132" stroke="#1a1d28" stroke-width="1"/>
+            <line x1="0" y1="176" x2="620" y2="176" stroke="#1a1d28" stroke-width="1"/>
+            <!-- Price labels -->
+            <text x="600" y="42" fill="#4a5068" font-size="9" font-family="JetBrains Mono">19870</text>
+            <text x="600" y="86" fill="#4a5068" font-size="9" font-family="JetBrains Mono">19845</text>
+            <text x="600" y="130" fill="#4a5068" font-size="9" font-family="JetBrains Mono">19820</text>
+            <text x="600" y="174" fill="#4a5068" font-size="9" font-family="JetBrains Mono">19795</text>
+            <!-- Candle wicks and bodies – bear run, then reversal -->
+            <!-- Bear candles -->
+            <line x1="30" y1="52" x2="30" y2="98" stroke="#f0404a" stroke-width="1.2"/>
+            <rect x="22" y="62" width="16" height="28" fill="#f0404a" opacity="0.85" rx="1"/>
+            <line x1="60" y1="68" x2="60" y2="115" stroke="#f0404a" stroke-width="1.2"/>
+            <rect x="52" y="76" width="16" height="32" fill="#f0404a" opacity="0.85" rx="1"/>
+            <line x1="90" y1="75" x2="90" y2="128" stroke="#f0404a" stroke-width="1.2"/>
+            <rect x="82" y="85" width="16" height="36" fill="#f0404a" opacity="0.85" rx="1"/>
+            <!-- Doji -->
+            <line x1="120" y1="114" x2="120" y2="132" stroke="#7e8599" stroke-width="1.2"/>
+            <rect x="112" y="119" width="16" height="6" fill="#7e8599" opacity="0.7" rx="1"/>
+            <!-- Absorption/reversal -->
+            <line x1="150" y1="108" x2="150" y2="135" stroke="#00d4a8" stroke-width="1.2"/>
+            <rect x="142" y="110" width="16" height="18" fill="#00d4a8" opacity="0.8" rx="1"/>
+            <line x1="180" y1="96" x2="180" y2="120" stroke="#00d4a8" stroke-width="1.2"/>
+            <rect x="172" y="98" width="16" height="18" fill="#00d4a8" opacity="0.85" rx="1"/>
+            <line x1="210" y1="80" x2="210" y2="106" stroke="#00d4a8" stroke-width="1.2"/>
+            <rect x="202" y="82" width="16" height="20" fill="#00d4a8" opacity="0.85" rx="1"/>
+            <line x1="240" y1="64" x2="240" y2="92" stroke="#00d4a8" stroke-width="1.2"/>
+            <rect x="232" y="66" width="16" height="22" fill="#00d4a8" opacity="0.9" rx="1"/>
+            <line x1="270" y1="55" x2="270" y2="76" stroke="#00d4a8" stroke-width="1.2"/>
+            <rect x="262" y="57" width="16" height="16" fill="#00d4a8" opacity="0.9" rx="1"/>
+            <line x1="300" y1="50" x2="300" y2="70" stroke="#00d4a8" stroke-width="1.2"/>
+            <rect x="292" y="52" width="16" height="15" fill="#00d4a8" opacity="0.9" rx="1"/>
+            <!-- Consolidation -->
+            <line x1="330" y1="55" x2="330" y2="72" stroke="#f0404a" stroke-width="1.2"/>
+            <rect x="322" y="57" width="16" height="10" fill="#f0404a" opacity="0.7" rx="1"/>
+            <line x1="360" y1="53" x2="360" y2="70" stroke="#00d4a8" stroke-width="1.2"/>
+            <rect x="352" y="55" width="16" height="12" fill="#00d4a8" opacity="0.75" rx="1"/>
+            <line x1="390" y1="50" x2="390" y2="68" stroke="#00d4a8" stroke-width="1.2"/>
+            <rect x="382" y="52" width="16" height="13" fill="#00d4a8" opacity="0.8" rx="1"/>
+            <!-- Latest partial candle -->
+            <line x1="420" y1="54" x2="420" y2="70" stroke="#00d4a8" stroke-width="1.2"/>
+            <rect x="412" y="56" width="16" height="9" fill="#00d4a8" opacity="0.5" rx="1"/>
+            <!-- Current price line -->
+            <line x1="0" y1="128" x2="420" y2="128" stroke="#00d4a8" stroke-width="0.8" stroke-dasharray="4,3" opacity="0.5"/>
+            <rect x="426" y="122" width="62" height="14" fill="#00d4a8" rx="3"/>
+            <text x="432" y="132" fill="#06120f" font-size="9.5" font-family="JetBrains Mono" font-weight="700">19,820.50</text>
+            <!-- Imbalance markers -->
+            <rect x="140" y="107" width="4" height="26" fill="#f5c842" opacity="0.7" rx="1"/>
+            <text x="146" y="118" fill="#f5c842" font-size="8" font-family="JetBrains Mono">IMB</text>
+            <!-- Volume bars at bottom -->
+            <rect x="22" y="185" width="16" height="22" fill="#f0404a" opacity="0.4" rx="1"/>
+            <rect x="52" y="180" width="16" height="27" fill="#f0404a" opacity="0.4" rx="1"/>
+            <rect x="82" y="176" width="16" height="31" fill="#f0404a" opacity="0.4" rx="1"/>
+            <rect x="112" y="188" width="16" height="19" fill="#7e8599" opacity="0.4" rx="1"/>
+            <rect x="142" y="183" width="16" height="24" fill="#00d4a8" opacity="0.4" rx="1"/>
+            <rect x="172" y="178" width="16" height="29" fill="#00d4a8" opacity="0.45" rx="1"/>
+            <rect x="202" y="174" width="16" height="33" fill="#00d4a8" opacity="0.5" rx="1"/>
+            <rect x="232" y="177" width="16" height="30" fill="#00d4a8" opacity="0.45" rx="1"/>
+            <rect x="262" y="182" width="16" height="25" fill="#00d4a8" opacity="0.4" rx="1"/>
+            <rect x="292" y="184" width="16" height="23" fill="#00d4a8" opacity="0.4" rx="1"/>
+            <rect x="322" y="189" width="16" height="18" fill="#f0404a" opacity="0.35" rx="1"/>
+            <rect x="352" y="186" width="16" height="21" fill="#00d4a8" opacity="0.35" rx="1"/>
+            <rect x="382" y="185" width="16" height="22" fill="#00d4a8" opacity="0.35" rx="1"/>
+            <rect x="412" y="191" width="16" height="16" fill="#00d4a8" opacity="0.3" rx="1"/>
+          </svg>
+        </div>
+        <div class="mockup-statusbar">
+          <div class="status-item">DELTA<span style="color:var(--green)">+8,240</span></div>
+          <div class="status-item">BUY VOL<span style="color:var(--green)">842K</span></div>
+          <div class="status-item">SELL VOL<span style="color:var(--red)">601K</span></div>
+          <div class="status-item" style="margin-left:auto;color:var(--green)">● LIVE</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TRADE IDEAS ── -->
+<section id="ideas">
+  <div class="ideas-header">
+    <div class="section-label">Order Flow Analysis</div>
+    <h2>Example trade setups, built on <em>footprint data</em></h2>
+    <p class="section-sub" style="margin:14px auto 0">Example trade ideas based on actual order flow signals — not lagging indicators.</p>
+  </div>
+  <div class="ideas-grid">
+    <div class="idea-card">
+      <div class="idea-header">
+        <span class="idea-pair">BTC - USDT</span>
+        <span class="idea-dir long">LONG</span>
+      </div>
+      <div class="idea-body">
+        <div class="idea-levels">
+          <div class="level-item">
+            <span class="level-label">Entry</span>
+            <span class="level-val entry">5,641.25</span>
+          </div>
+          <div class="level-item">
+            <span class="level-label">Stop Loss</span>
+            <span class="level-val sl">5,636.50</span>
+          </div>
+          <div class="level-item">
+            <span class="level-label">Target</span>
+            <span class="level-val tp">5,651.00</span>
+          </div>
+        </div>
+        <div class="idea-tags">
+          <span class="idea-tag">Absorption</span>
+          <span class="idea-tag">Stacked IMB</span>
+          <span class="idea-tag">Delta Flip</span>
+        </div>
+        <div class="idea-reasoning">
+          Strong absorption of sell-side aggression at 5,641 — 600+ contracts absorbed with +415 delta on the rejecting bar. Three consecutive upside imbalances signal institutional buying interest.
+        </div>
+      </div>
+    </div>
+    <div class="idea-card">
+      <div class="idea-header">
+        <span class="idea-pair">ETH - USDT</span>
+        <span class="idea-dir short">SHORT</span>
+      </div>
+      <div class="idea-body">
+        <div class="idea-levels">
+          <div class="level-item">
+            <span class="level-label">Entry</span>
+            <span class="level-val entry">19,824.75</span>
+          </div>
+          <div class="level-item">
+            <span class="level-label">Stop Loss</span>
+            <span class="level-val sl">19,836.00</span>
+          </div>
+          <div class="level-item">
+            <span class="level-label">Target</span>
+            <span class="level-val tp">19,798.50</span>
+          </div>
+        </div>
+        <div class="idea-tags">
+          <span class="idea-tag">Delta Divergence</span>
+          <span class="idea-tag">Exhaustion</span>
+          <span class="idea-tag">Sell Imbalance</span>
+        </div>
+        <div class="idea-reasoning">
+          Price made a new local high while cumulative delta diverged strongly negative. Aggressive sellers placing large market orders at highs with downside footprint imbalances across 3 consecutive bars.
+        </div>
+      </div>
+    </div>
+    <div class="idea-card">
+      <div class="idea-header">
+        <span class="idea-pair">SOL - USDT</span>
+        <span class="idea-dir long">LONG</span>
+      </div>
+      <div class="idea-body">
+        <div class="idea-levels">
+          <div class="level-item">
+            <span class="level-label">Entry</span>
+            <span class="level-val entry">78.42</span>
+          </div>
+          <div class="level-item">
+            <span class="level-label">Stop Loss</span>
+            <span class="level-val sl">77.88</span>
+          </div>
+          <div class="level-item">
+            <span class="level-label">Target</span>
+            <span class="level-val tp">79.65</span>
+          </div>
+        </div>
+        <div class="idea-tags">
+          <span class="idea-tag">Volume Cluster</span>
+          <span class="idea-tag">POC Retest</span>
+          <span class="idea-tag">Bid Stacking</span>
+        </div>
+        <div class="idea-reasoning">
+          High-volume node retest at 78.40 with bid-side stacking in the footprint. Over 1,200 contracts absorbed on the ask at a prior POC — consistent with defensive institutional positioning.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section id="cta">
+  <div class="cta-inner">
+    <div class="section-label" style="text-align:center">Get Started</div>
+    <h2>Start reading the market the right way</h2>
+    <p class="section-sub">
+      Join traders who've moved beyond price action guesswork. 
+      Hana Chart gives you the raw truth of every auction.
+    </p>
+    <a href="homepage.html" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/><path d="M6 5.5l4.5 2.5-4.5 2.5V5.5z" fill="currentColor"/></svg>
+      Open Hana Chart
+    </a>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">Hana<span>Chart</span></div>
+        <div class="footer-tagline">Advanced Footprint Charts & Order Flow Analysis</div>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <a href="#">Features</a>
+          <a href="#">Documentation</a>
+          <a href="#">Changelog</a>
+        </div>
+        <div class="footer-col">
+          <h4>Analysis</h4>
+          <a href="#">Trade Ideas</a>
+          <a href="#">Order Flow Guide</a>
+          <a href="#">Footprint Basics</a>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <a href="#">About</a>
+          <a href="#">Contact</a>
+          <a href="#">Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>⚠️ <strong style="color:var(--text-secondary)">Disclaimer:</strong> All trade ideas presented on Hana Chart are for <strong style="color:var(--text-secondary)">educational purposes only</strong> and do not constitute financial advice. Trading futures and other financial instruments involves substantial risk of loss. Past performance is not indicative of future results. Always consult a qualified financial advisor before making any trading decisions.</p>
+      <div class="footer-copy">© 2025 Hana Chart. All rights reserved.</div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
